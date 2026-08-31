@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient (Rich Emerald / Teal) -->
+    <linearGradient id="bgGrad512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d5c56" />
+      <stop offset="60%" stop-color="#0f766e" />
+      <stop offset="100%" stop-color="#043832" />
+    </linearGradient>
+
+    <!-- Warm Mint & Emerald Gradient for Conversation Bubble -->
+    <linearGradient id="bubbleGrad512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <!-- House Outline Gradient -->
+    <linearGradient id="houseGrad512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#e6fffa" />
+    </linearGradient>
+
+    <!-- Subtle Drop Shadow filter for mobile depth -->
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- App Icon Base: Android Squircle with subtle inset glow -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad512)" />
+  <rect x="6" y="6" width="500" height="500" rx="106" fill="none" stroke="#2dd4bf" stroke-width="7" stroke-opacity="0.35" />
+
+  <!-- MAIN SYMBOL: Modern Minimalist House + Conversation / Visit Dialog -->
+  <g transform="translate(64, 58)" filter="url(#softShadow)">
+    <!-- Modern Geometric House Body -->
+    <path 
+      d="M192 42 L330 154 C336 158.5 339 165 339 172 L339 326 C339 340 327 352 312 352 L72 352 C57 352 45 340 45 326 L45 172 C45 165 48 158.5 54 154 Z" 
+      fill="none" 
+      stroke="url(#houseGrad512)" 
+      stroke-width="28" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+    />
+
+    <!-- Overhang Roof Accent -->
+    <path 
+      d="M26 172 L192 40 L358 172" 
+      fill="none" 
+      stroke="#ffffff" 
+      stroke-width="32" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+    />
+
+    <!-- Chimney / Modern Geometric Feature -->
+    <path 
+      d="M288 116 L288 68 C288 62 294 58 300 58 L314 58 C320 58 326 62 326 68 L326 148" 
+      fill="none" 
+      stroke="#5eead4" 
+      stroke-width="18" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      stroke-opacity="0.75"
+    />
+
+    <!-- CONVERSATION / VISIT DIALOGUE BUBBLES -->
+    
+    <!-- Primary Conversation Bubble (The Visitor / Host dialogue) -->
+    <path 
+      d="M120 196 C120 176 138 160 160 160 L210 160 C232 160 250 176 250 196 C250 216 232 232 210 232 L168 232 L138 258 L144 232 C130 229 120 214 120 196 Z" 
+      fill="url(#bubbleGrad512)" 
+    />
+
+    <!-- Dialogue connection speech points inside primary bubble representing mutual discussion -->
+    <circle cx="165" cy="196" r="8" fill="#043832" />
+    <circle cx="192" cy="196" r="8" fill="#043832" />
+    <circle cx="219" cy="196" r="8" fill="#043832" />
+
+    <!-- Secondary mini dialogue bubble (The Warm Response / Follow-up) -->
+    <path 
+      d="M224 250 C224 238 234 228 248 228 L264 228 C278 228 288 238 288 250 C288 262 278 272 264 272 L256 272 L246 282 L248 272 C239 271 224 262 224 250 Z" 
+      fill="#ffffff" 
+      stroke="#10b981" 
+      stroke-width="5" 
+    />
+    
+    <!-- Door / Open Welcoming Entrance Step -->
+    <path 
+      d="M154 352 L154 308 C154 300 160 294 168 294 L216 294 C224 294 230 300 230 308 L230 352" 
+      fill="none" 
+      stroke="#5eead4" 
+      stroke-width="18" 
+      stroke-linecap="round" 
+    />
+  </g>
+</svg>

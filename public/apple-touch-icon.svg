@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <defs>
+    <linearGradient id="appleBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d5c56" />
+      <stop offset="60%" stop-color="#0f766e" />
+      <stop offset="100%" stop-color="#043832" />
+    </linearGradient>
+    <linearGradient id="appleBubbleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    <linearGradient id="appleHouseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#e6fffa" />
+    </linearGradient>
+  </defs>
+
+  <!-- iOS standard: icons are rendered square; iOS applies squircle mask -->
+  <rect width="180" height="180" fill="url(#appleBgGrad)" />
+
+  <!-- MAIN SYMBOL: Modern Minimalist House + Conversation / Visit Dialog -->
+  <g transform="translate(22, 20)">
+    <!-- House Body & Roof -->
+    <path 
+      d="M68 15 L116 54 C118 55.5 119 58 119 60.5 L119 114 C119 119 115 123 110 123 L26 123 C21 123 17 119 17 114 L17 60.5 C17 58 18 55.5 20 54 Z" 
+      fill="none" 
+      stroke="url(#appleHouseGrad)" 
+      stroke-width="10" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+    />
+
+    <!-- Overhang Roof Accent -->
+    <path 
+      d="M10 61 L68 14 L126 61" 
+      fill="none" 
+      stroke="#ffffff" 
+      stroke-width="11" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+    />
+
+    <!-- Chimney -->
+    <path 
+      d="M101 41 L101 24 C101 22 103 20 105 20 L110 20 C112 20 114 22 114 24 L114 51" 
+      fill="none" 
+      stroke="#5eead4" 
+      stroke-width="6.5" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      stroke-opacity="0.8"
+    />
+
+    <!-- Conversation Bubbles -->
+    <path 
+      d="M42 69 C42 62 48 56 55.5 56 L73.5 56 C81 56 87 62 87 69 C87 76 81 82 73.5 82 L59 82 L49 90.5 L51 82 C46 81 42 75.5 42 69 Z" 
+      fill="url(#appleBubbleGrad)" 
+    />
+
+    <circle cx="58" cy="69" r="2.8" fill="#043832" />
+    <circle cx="67.5" cy="69" r="2.8" fill="#043832" />
+    <circle cx="77" cy="69" r="2.8" fill="#043832" />
+
+    <!-- Secondary mini dialogue bubble -->
+    <path 
+      d="M79 88 C79 83.5 83 80 88 80 L93.5 80 C98.5 80 102 83.5 102 88 C102 92.5 98.5 95.5 93.5 95.5 L90.5 95.5 L86.5 99.5 L87.5 95.5 C84 95 79 92 79 88 Z" 
+      fill="#ffffff" 
+      stroke="#10b981" 
+      stroke-width="2" 
+    />
+    
+    <!-- Welcoming Door Step -->
+    <path 
+      d="M55 123 L55 108 C55 105 57.5 103 60.5 103 L75.5 103 C78.5 103 81 105 81 108 L81 123" 
+      fill="none" 
+      stroke="#5eead4" 
+      stroke-width="6.5" 
+      stroke-linecap="round" 
+    />
+  </g>
+</svg>

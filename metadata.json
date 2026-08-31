@@ -1,0 +1,6 @@
+{
+  "name": "MIS REVISITAS",
+  "description": "Aplicación Android completa y funcional para registrar, organizar y dar seguimiento a revisitas y cursos bíblicos, con control de lecciones, historial de trayectoria, calendario y copias de seguridad.",
+  "requestFramePermissions": ["notifications"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <!-- Background Gradient (Rich Emerald / Teal) -->
+    <linearGradient id="bgGrad192" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d5c56" />
+      <stop offset="60%" stop-color="#0f766e" />
+      <stop offset="100%" stop-color="#043832" />
+    </linearGradient>
+
+    <!-- Warm Golden / Mint Glow Gradient for Conversation -->
+    <linearGradient id="bubbleGrad192" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <!-- Clean White Gradient for House Outline -->
+    <linearGradient id="houseGrad192" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#e6fffa" />
+    </linearGradient>
+  </defs>
+
+  <!-- App Icon Base: Squircle with subtle depth -->
+  <rect width="192" height="192" rx="42" fill="url(#bgGrad192)" />
+  <rect x="2" y="2" width="188" height="188" rx="40" fill="none" stroke="#2dd4bf" stroke-width="2.5" stroke-opacity="0.35" />
+
+  <!-- MAIN SYMBOL: Modern Minimalist House + Conversation / Visit Dialog -->
+  <g transform="translate(24, 22)">
+    <!-- Modern Geometric House Body & Roof -->
+    <!-- Gable Roofline -->
+    <path 
+      d="M72 16 L124 58 C126 59.5 127 62 127 64.5 L127 122 C127 127.5 122.5 132 117 132 L27 132 C21.5 132 17 127.5 17 122 L17 64.5 C17 62 18 59.5 20 58 Z" 
+      fill="none" 
+      stroke="url(#houseGrad192)" 
+      stroke-width="11" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+    />
+
+    <!-- Overhang Roof Accent -->
+    <path 
+      d="M10 65 L72 15 L134 65" 
+      fill="none" 
+      stroke="#ffffff" 
+      stroke-width="12" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+    />
+
+    <!-- Chimney / Modern accent block -->
+    <path 
+      d="M108 44 L108 26 C108 24 110 22 112 22 L118 22 C120 22 122 24 122 26 L122 55" 
+      fill="none" 
+      stroke="#5eead4" 
+      stroke-width="7" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      stroke-opacity="0.7"
+    />
+
+    <!-- VISITATION & CONVERSATION HEART: Two friendly dialogue/people speech bubbles -->
+    
+    <!-- Primary Conversation Bubble (The Visitor / Host dialogue) -->
+    <!-- Left person / bubble -->
+    <path 
+      d="M45 74 C45 66.5 51.5 60 59.5 60 L78.5 60 C86.5 60 93 66.5 93 74 C93 81.5 86.5 88 78.5 88 L63 88 L52 97 L54 88 C49 87 45 81 45 74 Z" 
+      fill="url(#bubbleGrad192)" 
+    />
+
+    <!-- Dialogue connection lines inside primary bubble representing words / exchange -->
+    <circle cx="62" cy="74" r="3" fill="#043832" />
+    <circle cx="72" cy="74" r="3" fill="#043832" />
+    <circle cx="82" cy="74" r="3" fill="#043832" />
+
+    <!-- Secondary mini dialogue bubble (The Response / Continuous Conversation) -->
+    <path 
+      d="M84 94 C84 89.5 88 86 93 86 L99 86 C104 86 108 89.5 108 94 C108 98.5 104 102 99 102 L96 102 L92 106 L93 102 C89.5 101.5 84 98 84 94 Z" 
+      fill="#ffffff" 
+      stroke="#10b981" 
+      stroke-width="2" 
+    />
+    
+    <!-- Door / Open Entrance Welcoming Step -->
+    <path 
+      d="M58 132 L58 116 C58 113 60.5 110.5 63.5 110.5 L80.5 110.5 C83.5 110.5 86 113 86 116 L86 132" 
+      fill="none" 
+      stroke="#5eead4" 
+      stroke-width="7" 
+      stroke-linecap="round" 
+    />
+  </g>
+</svg>

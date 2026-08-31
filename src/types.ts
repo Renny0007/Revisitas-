@@ -4,14 +4,15 @@
 
 export type AllowedDayOfWeek = 0 | 2 | 4 | 6; // 0 = Domingo, 2 = Martes, 4 = Jueves, 6 = Sábado
 
-export type VisitResult = 'ENCONTRADA' | 'NO_ENCONTRADA' | 'SIN_REGISTRAR';
+export type VisitResult = 'ENCONTRADA' | 'NO_ENCONTRADA' | 'NO_PUDE_IR' | 'SIN_REGISTRAR';
 
 export type RevisitaStatus = 
   | 'HOY'            // Scheduled for today & pending
   | 'PROXIMA'        // Scheduled for a future date & pending
   | 'ATRASADA'       // Scheduled date has passed & pending
   | 'ENCONTRADA'     // Visit completed and found person
-  | 'NO_ENCONTRADA'; // Attempt completed but person was not home
+  | 'NO_ENCONTRADA'  // Attempt completed but person was not home
+  | 'NO_PUDE_IR';    // Could not go on the scheduled date
 
 export type CourseStatus = 'ACTIVO' | 'PAUSADO' | 'TERMINADO' | 'NO_CONTINUA';
 
@@ -118,6 +119,7 @@ export interface Statistics {
   overdue: number;
   found: number;
   notFound: number;
+  couldNotGo: number;
   // Cursos Bíblicos stats
   totalCourses: number;
   activeCourses: number;

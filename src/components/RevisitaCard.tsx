@@ -4,6 +4,7 @@ import {
   MessageSquare, 
   BookOpen, 
   Calendar, 
+  CalendarX,
   CheckCircle2, 
   XCircle, 
   Clock, 
@@ -167,6 +168,42 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
     onUpdatePerson(updated);
   };
 
+  // Handle Mark "NO PUDE IR"
+  const handleMarkCouldNotGo = () => {
+    const today = getTodayString();
+    const todayFormatted = formatShortDateES(today);
+
+    const attemptNumber = (person.history?.length || 0) + 1;
+    const newHistoryRecord: VisitHistoryRecord = {
+      id: generateUniqueId(),
+      attemptNumber,
+      scheduledDate: currentVisit.scheduledDate,
+      scheduledDateFormatted: currentVisit.scheduledDateFormatted,
+      actualVisitDate: today,
+      actualVisitDateFormatted: todayFormatted,
+      result: 'NO_PUDE_IR',
+      topicSpoken: currentVisit.topicSpoken,
+      topicPending: currentVisit.topicPending,
+      notes: 'No pude ir en la fecha programada.',
+      timestamp: new Date().toISOString(),
+    };
+
+    const updated: Person = {
+      ...person,
+      updatedAt: new Date().toISOString(),
+      currentVisit: {
+        ...currentVisit,
+        result: 'NO_PUDE_IR',
+        actualVisitDate: today,
+        actualVisitDateFormatted: todayFormatted,
+        resultRegisteredAt: new Date().toISOString(),
+      },
+      history: [...(person.history || []), newHistoryRecord],
+    };
+
+    onUpdatePerson(updated);
+  };
+
   // Reset to SIN_REGISTRAR
   const handleResetToPending = () => {
     const updated: Person = {
@@ -211,7 +248,14 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs">
             <XCircle className="w-3.5 h-3.5 text-rose-600" />
-            <span>🔴 NO ENCONTRADA</span>
+            <span>🔴 NO ESTABA</span>
+          </span>
+        );
+      case 'NO_PUDE_IR':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800 border border-slate-300 shadow-2xs">
+            <CalendarX className="w-3.5 h-3.5 text-slate-600" />
+            <span>⚪ NO PUDE IR</span>
           </span>
         );
       case 'PROXIMA':
@@ -227,6 +271,7 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
 
   const isFound = currentVisit.result === 'ENCONTRADA';
   const isNotFound = currentVisit.result === 'NO_ENCONTRADA';
+  const isCouldNotGo = currentVisit.result === 'NO_PUDE_IR';
   const isUnregistered = currentVisit.result === 'SIN_REGISTRAR';
 
   return (
@@ -300,11 +345,21 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
 
           {/* Fecha realmente realizada (si ya fue registrada) */}
           {currentVisit.actualVisitDate && (
-            <div className="flex items-start gap-2 pt-1.5 px-1 border-t border-slate-200/60 text-xs text-emerald-900">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 pt-1.5 px-1 border-t border-slate-200/60 text-xs text-slate-800">
+              {isFound ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              ) : isNotFound ? (
+                <XCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              ) : (
+                <CalendarX className="w-4 h-4 text-slate-600 shrink-0 mt-0.5" />
+              )}
               <div className="min-w-0">
                 <span className="font-bold">
-                  {isFound ? 'Visitado el: ' : 'Intento realizado el: '}
+                  {isFound 
+                    ? 'Visitado el: ' 
+                    : isNotFound 
+                    ? 'Intento realizado el: ' 
+                    : 'Registrado (no se pudo ir): '}
                 </span>
                 <span className="font-extrabold capitalize">
                   {currentVisit.actualVisitDateFormatted || currentVisit.actualVisitDate}
@@ -314,7 +369,7 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
           )}
         </div>
 
-        {/* Sección: REGISTRAR QUÉ OCURRIÓ CUANDO FUI (Selección exclusiva clara) */}
+        {/* Sección: REGISTRAR QUÉ OCURRIÓ CUANDO FUI (Selección exclusiva clara de 3 casillas) */}
         <div className="mt-3.5 pt-3 border-t border-slate-100">
           <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 mb-2 flex items-center justify-between">
             <span>¿QUÉ OCURRIÓ CUANDO FUISTE?</span>
@@ -330,7 +385,7 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {/* Opción 1: FUI Y LA ENCONTRÉ */}
             <button
               type="button"
@@ -354,7 +409,7 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
                 <div className={`text-[10px] mt-0.5 ${isFound ? 'text-emerald-100' : 'text-slate-500'}`}>
                   {isFound && currentVisit.actualVisitDateFormatted 
                     ? `Visitado: ${currentVisit.actualVisitDateFormatted}` 
-                    : 'Registra fecha actual'}
+                    : 'Registra fecha'}
                 </div>
               </div>
             </button>
@@ -382,7 +437,35 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
                 <div className={`text-[10px] mt-0.5 ${isNotFound ? 'text-rose-100' : 'text-slate-500'}`}>
                   {isNotFound && currentVisit.actualVisitDateFormatted 
                     ? `Intento: ${currentVisit.actualVisitDateFormatted}` 
-                    : 'Registra intento'}
+                    : 'No estaba'}
+                </div>
+              </div>
+            </button>
+
+            {/* Opción 3: NO PUDE IR */}
+            <button
+              type="button"
+              id={`btn-no-pude-ir-${person.id}`}
+              onClick={handleMarkCouldNotGo}
+              className={`p-2.5 rounded-xl border text-left flex items-start gap-2 transition-all active:scale-[0.98] ${
+                isCouldNotGo
+                  ? 'bg-slate-800 text-white border-slate-800 shadow-xs font-semibold'
+                  : 'bg-white hover:bg-slate-100/90 border-slate-200 text-slate-800'
+              }`}
+            >
+              <div className={`w-4 h-4 rounded-md mt-0.5 border flex items-center justify-center shrink-0 ${
+                isCouldNotGo ? 'bg-white border-white text-slate-800' : 'border-slate-300 bg-white'
+              }`}>
+                {isCouldNotGo && <CalendarX className="w-3.5 h-3.5" />}
+              </div>
+              <div className="min-w-0">
+                <div className={`text-xs font-bold leading-tight ${isCouldNotGo ? 'text-white' : 'text-slate-900'}`}>
+                  NO PUDE IR
+                </div>
+                <div className={`text-[10px] mt-0.5 ${isCouldNotGo ? 'text-slate-300' : 'text-slate-500'}`}>
+                  {isCouldNotGo && currentVisit.actualVisitDateFormatted 
+                    ? `Fecha: ${currentVisit.actualVisitDateFormatted}` 
+                    : 'Registrar fecha'}
                 </div>
               </div>
             </button>
@@ -413,6 +496,20 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
               >
                 <RefreshCw className="w-4 h-4 text-amber-200" />
                 <span>＋ PROGRAMAR NUEVO INTENTO</span>
+              </button>
+            </div>
+          )}
+
+          {isCouldNotGo && (
+            <div className="mt-2.5">
+              <button
+                type="button"
+                id={`btn-reprogramar-revisita-${person.id}`}
+                onClick={() => handleTriggerScheduleNext('NEW_ATTEMPT')}
+                className="w-full py-2.5 px-3 bg-slate-800 hover:bg-slate-900 active:bg-black text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+              >
+                <Calendar className="w-4 h-4 text-slate-300" />
+                <span>＋ REPROGRAMAR PARA OTRO DÍA</span>
               </button>
             </div>
           )}

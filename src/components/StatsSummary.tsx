@@ -22,6 +22,7 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
     overdue: 0,
     found: 0,
     notFound: 0,
+    couldNotGo: 0,
     totalCourses: 0,
     activeCourses: 0,
     pausedCourses: 0,

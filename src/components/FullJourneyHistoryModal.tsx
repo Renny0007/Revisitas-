@@ -4,6 +4,7 @@ import {
   History, 
   BookOpen, 
   Calendar, 
+  CalendarX,
   CheckCircle2, 
   XCircle, 
   Clock, 
@@ -213,16 +214,25 @@ export const FullJourneyHistoryModal: React.FC<FullJourneyHistoryModalProps> = (
                   {revisitaHistory.map((rec, idx) => {
                     const isFound = rec.result === 'ENCONTRADA';
                     const isNotFound = rec.result === 'NO_ENCONTRADA';
+                    const isCouldNotGo = rec.result === 'NO_PUDE_IR';
 
                     return (
                       <div key={rec.id || idx} className="relative pl-7">
                         <div className={`absolute left-1 top-3 w-4 h-4 -translate-x-1/2 rounded-full border-2 border-white flex items-center justify-center shadow-xs ${
-                          isFound ? 'bg-emerald-600 text-white' : isNotFound ? 'bg-rose-600 text-white' : 'bg-amber-500 text-white'
+                          isFound 
+                            ? 'bg-emerald-600 text-white' 
+                            : isNotFound 
+                            ? 'bg-rose-600 text-white' 
+                            : isCouldNotGo
+                            ? 'bg-slate-700 text-white'
+                            : 'bg-amber-500 text-white'
                         }`}>
                           {isFound ? (
                             <CheckCircle2 className="w-2.5 h-2.5" />
                           ) : isNotFound ? (
                             <XCircle className="w-2.5 h-2.5" />
+                          ) : isCouldNotGo ? (
+                            <CalendarX className="w-2.5 h-2.5" />
                           ) : (
                             <Clock className="w-2.5 h-2.5" />
                           )}
@@ -233,21 +243,29 @@ export const FullJourneyHistoryModal: React.FC<FullJourneyHistoryModalProps> = (
                             ? 'bg-emerald-50/50 border-emerald-200' 
                             : isNotFound 
                             ? 'bg-rose-50/40 border-rose-200' 
+                            : isCouldNotGo
+                            ? 'bg-slate-50 border-slate-300'
                             : 'bg-white border-slate-200'
                         }`}>
                           <div className="flex items-center justify-between gap-2 border-b border-slate-200/70 pb-2">
                             <span className="text-xs font-extrabold uppercase text-slate-900 bg-white px-2 py-0.5 rounded-md border border-slate-200">
-                              Intento {rec.attemptNumber || idx + 1}
+                              Registro {rec.attemptNumber || idx + 1}
                             </span>
                             <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                              isFound ? 'bg-emerald-100 text-emerald-900' : isNotFound ? 'bg-rose-100 text-rose-900' : 'bg-amber-100 text-amber-900'
+                              isFound 
+                                ? 'bg-emerald-100 text-emerald-900' 
+                                : isNotFound 
+                                ? 'bg-rose-100 text-rose-900' 
+                                : isCouldNotGo
+                                ? 'bg-slate-200 text-slate-900'
+                                : 'bg-amber-100 text-amber-900'
                             }`}>
-                              {isFound ? '🟢 Fui y la encontré' : isNotFound ? '🔴 Fui y no estaba' : '⚪ Sin registrar'}
+                              {isFound ? '🟢 Fui y la encontré' : isNotFound ? '🔴 Fui y no estaba' : isCouldNotGo ? '⚪ No pude ir' : '⚪ Sin registrar'}
                             </span>
                           </div>
 
                           <div className="text-xs text-slate-600 flex items-center justify-between">
-                            <span>📅 Fui el: <strong className="text-slate-900">{rec.actualVisitDateFormatted || rec.actualVisitDate || 'No especificada'}</strong></span>
+                            <span>📅 {isCouldNotGo ? 'Fecha registrada:' : 'Fui el:'} <strong className="text-slate-900">{rec.actualVisitDateFormatted || rec.actualVisitDate || 'No especificada'}</strong></span>
                             <span>Agendada: {rec.scheduledDateFormatted || rec.scheduledDate}</span>
                           </div>
 

@@ -30,6 +30,9 @@ export function getPersonStatus(person: Person): RevisitaStatus {
   if (currentVisit.result === 'NO_ENCONTRADA') {
     return 'NO_ENCONTRADA';
   }
+  if (currentVisit.result === 'NO_PUDE_IR') {
+    return 'NO_PUDE_IR';
+  }
 
   // Result is SIN_REGISTRAR / PENDIENTE
   if (isDateToday(currentVisit.scheduledDate)) {
@@ -253,6 +256,7 @@ export function calculateStatistics(persons: Person[]): Statistics {
     overdue: 0,
     found: 0,
     notFound: 0,
+    couldNotGo: 0,
     totalCourses: 0,
     activeCourses: 0,
     pausedCourses: 0,
@@ -270,6 +274,7 @@ export function calculateStatistics(persons: Person[]): Statistics {
   let overdueCount = 0;
   let foundCount = 0;
   let notFoundCount = 0;
+  let couldNotGoCount = 0;
 
   // Cursos Bíblicos
   let totalCourses = 0;
@@ -316,6 +321,9 @@ export function calculateStatistics(persons: Person[]): Statistics {
         case 'NO_ENCONTRADA':
           notFoundCount++;
           break;
+        case 'NO_PUDE_IR':
+          couldNotGoCount++;
+          break;
       }
     }
   }
@@ -327,6 +335,7 @@ export function calculateStatistics(persons: Person[]): Statistics {
     overdue: overdueCount,
     found: foundCount,
     notFound: notFoundCount,
+    couldNotGo: couldNotGoCount,
     totalCourses,
     activeCourses,
     pausedCourses,

@@ -204,6 +204,7 @@ export default function App() {
       overdue: 0,
       found: 0,
       notFound: 0,
+      couldNotGo: 0,
       totalCourses: 0,
       activeCourses: 0,
       pausedCourses: 0,
@@ -253,7 +254,7 @@ export default function App() {
         return;
       }
       if (activeFilter === 'VISITADAS') {
-        if (status === 'ENCONTRADA' || status === 'NO_ENCONTRADA') other.push(p);
+        if (status === 'ENCONTRADA' || status === 'NO_ENCONTRADA' || status === 'NO_PUDE_IR') other.push(p);
         return;
       }
 

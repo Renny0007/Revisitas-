@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, History, Calendar, CheckCircle2, XCircle, Clock, MessageSquare, BookOpen, FileText, Trash2, ChevronRight } from 'lucide-react';
+import { X, History, Calendar, CalendarX, CheckCircle2, XCircle, Clock, MessageSquare, BookOpen, FileText, Trash2, ChevronRight } from 'lucide-react';
 import { Person, VisitHistoryRecord } from '../types';
 
 interface HistoryModalProps {
@@ -66,7 +66,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
               </div>
               <h3 className="text-sm font-bold text-slate-800 mb-1">Sin historial previo aún</h3>
               <p className="text-xs text-slate-500 max-w-xs mx-auto">
-                Cuando marques "Fui y la encontré" o "Fui y no estaba", cada intento y visita quedará registrado aquí de forma permanente.
+                Cuando marques "Fui y la encontré", "Fui y no estaba" o "No pude ir", cada intento y registro quedará guardado aquí de forma permanente.
               </p>
             </div>
           ) : (
@@ -74,6 +74,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
               {history.map((record, index) => {
                 const isFound = record.result === 'ENCONTRADA';
                 const isNotFound = record.result === 'NO_ENCONTRADA';
+                const isCouldNotGo = record.result === 'NO_PUDE_IR';
 
                 return (
                   <div 
@@ -87,12 +88,16 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                         ? 'bg-emerald-600 text-white' 
                         : isNotFound 
                         ? 'bg-rose-600 text-white' 
+                        : isCouldNotGo
+                        ? 'bg-slate-700 text-white'
                         : 'bg-amber-500 text-white'
                     }`}>
                       {isFound ? (
                         <CheckCircle2 className="w-3 h-3" />
                       ) : isNotFound ? (
                         <XCircle className="w-3 h-3" />
+                      ) : isCouldNotGo ? (
+                        <CalendarX className="w-3 h-3" />
                       ) : (
                         <Clock className="w-3 h-3" />
                       )}
@@ -104,24 +109,29 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                         ? 'bg-emerald-50/50 border-emerald-200/80' 
                         : isNotFound 
                         ? 'bg-rose-50/40 border-rose-200/80' 
+                        : isCouldNotGo
+                        ? 'bg-slate-50 border-slate-300'
                         : 'bg-white border-slate-200'
                     }`}>
                       {/* Top status bar */}
                       <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-200/60 mb-2.5">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-extrabold uppercase tracking-wider text-slate-900 bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">
-                            Intento {record.attemptNumber || index + 1}
+                            Registro {record.attemptNumber || index + 1}
                           </span>
                           <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
                             isFound 
                               ? 'bg-emerald-100 text-emerald-900' 
                               : isNotFound 
                               ? 'bg-rose-100 text-rose-900' 
+                              : isCouldNotGo
+                              ? 'bg-slate-200 text-slate-900'
                               : 'bg-amber-100 text-amber-900'
                           }`}>
                             {isFound && '🟢 Fui y la encontré'}
                             {isNotFound && '🔴 Fui y no estaba'}
-                            {!isFound && !isNotFound && '⚪ Sin registrar'}
+                            {isCouldNotGo && '⚪ No pude ir'}
+                            {!isFound && !isNotFound && !isCouldNotGo && '⚪ Sin registrar'}
                           </span>
                         </div>
 
@@ -155,10 +165,18 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
 
                         <div>
                           <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-emerald-600" />
-                            <span>Fui el:</span>
+                            {isFound ? (
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            ) : isNotFound ? (
+                              <XCircle className="w-3 h-3 text-rose-600" />
+                            ) : (
+                              <CalendarX className="w-3 h-3 text-slate-600" />
+                            )}
+                            <span>{isCouldNotGo ? 'Fecha registrada:' : 'Fui el:'}</span>
                           </div>
-                          <div className="font-semibold text-emerald-900 capitalize mt-0.5">
+                          <div className={`font-semibold capitalize mt-0.5 ${
+                            isFound ? 'text-emerald-900' : isNotFound ? 'text-rose-900' : 'text-slate-900'
+                          }`}>
                             {record.actualVisitDateFormatted || record.actualVisitDate || 'No especificada'}
                           </div>
                         </div>

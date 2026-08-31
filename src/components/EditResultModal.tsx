@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, CheckCircle2, XCircle, Clock, Calendar, FileText } from 'lucide-react';
+import { X, CheckCircle2, XCircle, Clock, Calendar, CalendarX, FileText } from 'lucide-react';
 import { Person, VisitResult } from '../types';
 import { formatFullDateES, formatShortDateES, getTodayString } from '../utils/dateUtils';
 
@@ -146,7 +146,33 @@ export const EditResultModal: React.FC<EditResultModalProps> = ({
               </div>
             </label>
 
-            {/* Option 3: SIN_REGISTRAR */}
+            {/* Option 3: NO_PUDE_IR */}
+            <label 
+              className={`flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                selectedResult === 'NO_PUDE_IR'
+                  ? 'border-slate-800 bg-slate-100 text-slate-950 shadow-xs'
+                  : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-800'
+              }`}
+            >
+              <input
+                type="radio"
+                name="visit-result-option"
+                checked={selectedResult === 'NO_PUDE_IR'}
+                onChange={() => setSelectedResult('NO_PUDE_IR')}
+                className="sr-only"
+              />
+              <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
+                selectedResult === 'NO_PUDE_IR' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'
+              }`}>
+                <CalendarX className="w-4 h-4" />
+              </div>
+              <div className="flex-1 text-xs">
+                <div className="font-bold text-slate-900">No pude ir</div>
+                <p className="text-slate-500 text-[11px] mt-0.5">Registrar la fecha en que no fue posible realizar la revisita.</p>
+              </div>
+            </label>
+
+            {/* Option 4: SIN_REGISTRAR */}
             <label 
               className={`flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
                 selectedResult === 'SIN_REGISTRAR'

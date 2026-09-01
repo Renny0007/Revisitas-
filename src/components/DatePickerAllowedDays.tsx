@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Check, AlertCircle, Info } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { 
   formatDateToISO, 
   formatFullDateES, 
   getDayName, 
   getTodayString, 
   getUpcomingAllowedDates, 
-  isAllowedDateString, 
-  isAllowedDayOfWeek, 
   parseISODate,
   MONTH_NAMES_ES,
   DAY_NAMES_ES
@@ -24,7 +22,7 @@ interface DatePickerAllowedDaysProps {
 export const DatePickerAllowedDays: React.FC<DatePickerAllowedDaysProps> = ({
   value,
   onChange,
-  label = 'Día de la próxima revisita',
+  label = 'Día de la próxima revisita o estudio',
   id = 'date-picker',
   required,
 }) => {
@@ -55,59 +53,42 @@ export const DatePickerAllowedDays: React.FC<DatePickerAllowedDaysProps> = ({
   const calendarDays: Array<{
     dayNumber: number;
     iso: string;
-    isAllowed: boolean;
     isSelected: boolean;
     isToday: boolean;
     dayOfWeek: number;
   }> = [];
 
-  // Padding days before start of month
-  for (let i = 0; i < startDayOfWeek; i++) {
-    // Empty spacer
-  }
-
   for (let d = 1; d <= daysInMonth; d++) {
     const dDate = new Date(currentYear, currentMonth, d);
     const iso = formatDateToISO(dDate);
     const dayOfWeek = dDate.getDay();
-    const isAllowed = isAllowedDayOfWeek(dayOfWeek);
     const isSelected = iso === value;
     const isToday = iso === todayStr;
 
     calendarDays.push({
       dayNumber: d,
       iso,
-      isAllowed,
       isSelected,
       isToday,
       dayOfWeek,
     });
   }
 
-  const selectedDayName = value ? getDayName(value) : '';
-  const isCurrentlyAllowed = isAllowedDateString(value);
-
   return (
     <div className="space-y-3" id={id}>
       <div className="flex items-center justify-between">
         <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-          {label} <span className="text-rose-500">*</span>
+          {label} {required && <span className="text-rose-500">*</span>}
         </label>
-        <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
-          Solo Mar • Jue • Sáb • Dom
+        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
+          Todos los días disponibles
         </span>
       </div>
 
       {/* Selected Date Summary Banner */}
-      <div className={`p-3 rounded-xl border transition-all ${
-        isCurrentlyAllowed 
-          ? 'bg-gradient-to-r from-emerald-50 to-teal-50/50 border-emerald-200 text-emerald-950 shadow-xs' 
-          : 'bg-rose-50 border-rose-200 text-rose-900'
-      }`}>
+      <div className="p-3 rounded-xl border transition-all bg-gradient-to-r from-emerald-50 to-teal-50/50 border-emerald-200 text-emerald-950 shadow-xs">
         <div className="flex items-start gap-2.5">
-          <div className={`p-2 rounded-lg shrink-0 mt-0.5 ${
-            isCurrentlyAllowed ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
-          }`}>
+          <div className="p-2 rounded-lg shrink-0 mt-0.5 bg-emerald-700 text-white shadow-xs">
             <CalendarIcon className="w-4 h-4" />
           </div>
           <div className="min-w-0 flex-1">
@@ -117,20 +98,14 @@ export const DatePickerAllowedDays: React.FC<DatePickerAllowedDaysProps> = ({
             <div className="text-sm font-bold text-slate-900 capitalize break-words">
               {value ? formatFullDateES(value) : 'Ninguna fecha seleccionada'}
             </div>
-            {!isCurrentlyAllowed && value && (
-              <div className="flex items-center gap-1 text-xs text-rose-600 mt-1 font-medium">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>Solo puedes seleccionar Martes, Jueves, Sábado o Domingo.</span>
-              </div>
-            )}
           </div>
         </div>
       </div>
 
-      {/* Quick selection chips for next allowed days */}
+      {/* Quick selection chips */}
       <div>
         <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-          <span>Accesos rápidos (próximos días permitidos)</span>
+          <span>Accesos rápidos (próximos días)</span>
         </div>
         <div className="grid grid-cols-3 gap-1.5">
           {upcomingList.map((item) => {
@@ -148,7 +123,7 @@ export const DatePickerAllowedDays: React.FC<DatePickerAllowedDaysProps> = ({
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className={`font-bold ${isSelected ? 'text-white' : 'text-emerald-700'}`}>
+                  <span className={`font-bold ${isSelected ? 'text-white' : 'text-emerald-800'}`}>
                     {item.dayName}
                   </span>
                   {item.isToday && (
@@ -199,20 +174,14 @@ export const DatePickerAllowedDays: React.FC<DatePickerAllowedDaysProps> = ({
 
         {/* Day headers */}
         <div className="grid grid-cols-7 gap-1 text-center mb-1">
-          {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map((abbr, idx) => {
-            const isAllowedDay = isAllowedDayOfWeek(idx);
-            return (
-              <div 
-                key={abbr} 
-                className={`text-[10px] font-bold py-1 ${
-                  isAllowedDay ? 'text-emerald-700 font-extrabold' : 'text-slate-300'
-                }`}
-                title={isAllowedDay ? 'Día permitido para revisitas' : 'Día bloqueado'}
-              >
-                {abbr}
-              </div>
-            );
-          })}
+          {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map((abbr) => (
+            <div 
+              key={abbr} 
+              className="text-[10px] font-bold py-1 text-slate-600"
+            >
+              {abbr}
+            </div>
+          ))}
         </div>
 
         {/* Calendar days grid */}
@@ -223,18 +192,6 @@ export const DatePickerAllowedDays: React.FC<DatePickerAllowedDaysProps> = ({
           ))}
 
           {calendarDays.map((cell) => {
-            if (!cell.isAllowed) {
-              return (
-                <div
-                  key={cell.iso}
-                  className="h-8 flex items-center justify-center text-xs text-slate-300 bg-slate-50/50 rounded-md cursor-not-allowed select-none"
-                  title="Solo permitido Martes, Jueves, Sábado y Domingo"
-                >
-                  {cell.dayNumber}
-                </div>
-              );
-            }
-
             return (
               <button
                 key={cell.iso}
@@ -243,31 +200,19 @@ export const DatePickerAllowedDays: React.FC<DatePickerAllowedDaysProps> = ({
                 onClick={() => onChange(cell.iso)}
                 className={`h-8 flex flex-col items-center justify-center rounded-lg text-xs font-semibold transition-all active:scale-95 relative ${
                   cell.isSelected
-                    ? 'bg-emerald-700 text-white font-bold shadow-xs'
+                    ? 'bg-emerald-700 text-white font-bold shadow-xs ring-2 ring-emerald-500/40'
                     : cell.isToday
-                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold hover:bg-emerald-100'
-                    : 'text-slate-800 bg-slate-50 hover:bg-emerald-100 hover:text-emerald-900 border border-slate-100'
+                    ? 'bg-amber-50 text-amber-900 border border-amber-300 font-bold hover:bg-amber-100'
+                    : 'text-slate-800 bg-slate-50/80 hover:bg-emerald-50 hover:text-emerald-900 border border-slate-100'
                 }`}
               >
                 <span>{cell.dayNumber}</span>
                 {cell.isToday && !cell.isSelected && (
-                  <span className="w-1 h-1 bg-emerald-600 rounded-full -mt-0.5" />
+                  <span className="w-1 h-1 bg-amber-600 rounded-full -mt-0.5" />
                 )}
               </button>
             );
           })}
-        </div>
-
-        {/* Legend */}
-        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded bg-emerald-700 inline-block"></span>
-            <span>Permitido (Mar, Jue, Sáb, Dom)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded bg-slate-100 border border-slate-200 inline-block text-slate-300"></span>
-            <span>Bloqueado</span>
-          </div>
         </div>
       </div>
     </div>

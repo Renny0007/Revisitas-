@@ -252,6 +252,8 @@ export function calculateStatistics(persons: Person[]): Statistics {
   const fallbackStats: Statistics = {
     total: 0,
     today: 0,
+    todayRevisitas: 0,
+    todayStudies: 0,
     upcoming: 0,
     overdue: 0,
     found: 0,
@@ -269,7 +271,9 @@ export function calculateStatistics(persons: Person[]): Statistics {
     return fallbackStats;
   }
 
-  let todayCount = 0;
+  const todayStr = getTodayString();
+  let todayRevisitasCount = 0;
+  let todayStudiesCount = 0;
   let upcomingCount = 0;
   let overdueCount = 0;
   let foundCount = 0;
@@ -293,7 +297,11 @@ export function calculateStatistics(persons: Person[]): Statistics {
       if (cStatus === 'ACTIVO') {
         activeCourses++;
         if (person.bibleCourse.nextStudyDate) {
-          upcomingStudies++;
+          if (person.bibleCourse.nextStudyDate === todayStr) {
+            todayStudiesCount++;
+          } else if (person.bibleCourse.nextStudyDate > todayStr) {
+            upcomingStudies++;
+          }
         }
       } else if (cStatus === 'PAUSADO') {
         pausedCourses++;
@@ -307,7 +315,7 @@ export function calculateStatistics(persons: Person[]): Statistics {
       const status = getPersonStatus(person);
       switch (status) {
         case 'HOY':
-          todayCount++;
+          todayRevisitasCount++;
           break;
         case 'PROXIMA':
           upcomingCount++;
@@ -328,9 +336,13 @@ export function calculateStatistics(persons: Person[]): Statistics {
     }
   }
 
+  const combinedToday = todayRevisitasCount + todayStudiesCount;
+
   return {
     total: persons.length,
-    today: todayCount,
+    today: combinedToday,
+    todayRevisitas: todayRevisitasCount,
+    todayStudies: todayStudiesCount,
     upcoming: upcomingCount,
     overdue: overdueCount,
     found: foundCount,

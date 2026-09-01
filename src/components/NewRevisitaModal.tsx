@@ -61,7 +61,7 @@ export const NewRevisitaModal: React.FC<NewRevisitaModalProps> = ({
     }
 
     if (!scheduledDate || !isAllowedDateString(scheduledDate)) {
-      setErrorMessage('Debes seleccionar un día permitido para la revisita (Martes, Jueves, Sábado o Domingo).');
+      setErrorMessage('Por favor selecciona una fecha para la revisita.');
       return;
     }
 

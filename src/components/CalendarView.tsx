@@ -178,14 +178,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
         {/* Days of week header */}
         <div className="grid grid-cols-7 gap-1 text-center mt-4 mb-2">
-          {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map((name, i) => {
-            const isAllowed = isAllowedDayOfWeek(i);
+          {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map((name) => {
             return (
               <div
                 key={name}
-                className={`text-[11px] font-bold py-1 ${
-                  isAllowed ? 'text-teal-700 font-extrabold' : 'text-slate-400'
-                }`}
+                className="text-[11px] font-bold py-1 text-slate-700"
               >
                 {name}
               </div>
@@ -203,7 +200,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             const dayNum = idx + 1;
             const dDate = new Date(year, month, dayNum);
             const iso = formatDateToISO(dDate);
-            const isAllowed = isAllowedDayOfWeek(dDate.getDay());
             const isSelected = iso === selectedDayISO;
             const isToday = iso === todayStr;
             
@@ -217,14 +213,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 type="button"
                 id={`cal-grid-day-${iso}`}
                 onClick={() => setSelectedDayISO(iso)}
-                className={`h-12 relative flex flex-col items-center justify-start pt-1 rounded-xl transition-all active:scale-95 ${
+                className={`h-12 relative flex flex-col items-center justify-start pt-1 rounded-xl transition-all active:scale-95 cursor-pointer ${
                   isSelected
                     ? 'bg-slate-900 text-white font-extrabold shadow-sm ring-2 ring-slate-800/40'
                     : isToday
-                    ? 'bg-amber-50 text-amber-900 border border-amber-300 font-bold'
-                    : isAllowed
-                    ? 'bg-slate-50 hover:bg-teal-50 text-slate-800 font-semibold border border-slate-100'
-                    : 'bg-white text-slate-400 opacity-60 hover:opacity-90'
+                    ? 'bg-amber-50 text-amber-900 border border-amber-300 font-bold hover:bg-amber-100'
+                    : 'bg-slate-50 hover:bg-teal-50 text-slate-800 font-semibold border border-slate-100'
                 }`}
               >
                 <span className="text-xs">{dayNum}</span>
@@ -269,8 +263,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-700 inline-block"></span>
             <span>Cursos Bíblicos</span>
           </div>
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <span>Días válidos: Mar, Jue, Sáb, Dom</span>
+          <div className="flex items-center gap-1.5 text-slate-500">
+            <span>Todos los días habilitados</span>
           </div>
         </div>
       </div>
@@ -293,21 +287,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           </div>
 
           {/* Button: Nueva Revisita para este día */}
-          {isSelectedDateAllowed ? (
-            <button
-              type="button"
-              id="btn-add-revisita-on-date"
-              onClick={() => handleAddNew(selectedDayISO)}
-              className="py-2 px-3 bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5"
-            >
-              <Plus className="w-4 h-4" />
-              <span>＋ Agendar aquí</span>
-            </button>
-          ) : (
-            <div className="text-[10px] font-semibold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200">
-              Día no hábil para visitas
-            </div>
-          )}
+          <button
+            type="button"
+            id="btn-add-revisita-on-date"
+            onClick={() => handleAddNew(selectedDayISO)}
+            className="py-2 px-3 bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>＋ Agendar aquí</span>
+          </button>
         </div>
 
         {/* Combined List for Selected Day */}
@@ -318,15 +306,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               <div className="text-xs font-bold text-slate-700">
                 No hay revisitas ni estudios bíblicos para este día
               </div>
-              {isSelectedDateAllowed ? (
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Pulsa "＋ Agendar aquí" para registrar una nueva persona para este día.
-                </p>
-              ) : (
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Recuerda que solo se pueden programar actividades los Martes, Jueves, Sábados y Domingos.
-                </p>
-              )}
+              <p className="text-[11px] text-slate-500 mt-1">
+                Pulsa "＋ Agendar aquí" para registrar una nueva persona para este día.
+              </p>
             </div>
           ) : (
             <>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FilterType, Statistics } from '../types';
-import { Clock, Calendar, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
+import { Clock, Calendar, AlertTriangle, CheckCircle2, BookOpen } from 'lucide-react';
 
 interface StatsSummaryProps {
   stats?: Statistics;
@@ -15,20 +15,35 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
   activeFilter,
   onSelectFilter,
 }) => {
-  const currentStats: Statistics = stats || statistics || {
-    total: 0,
-    today: 0,
-    upcoming: 0,
-    overdue: 0,
-    found: 0,
-    notFound: 0,
-    couldNotGo: 0,
-    totalCourses: 0,
-    activeCourses: 0,
-    pausedCourses: 0,
-    completedCourses: 0,
-    noContinuaCourses: 0,
-    upcomingStudies: 0,
+  const currentStats = {
+    total: stats?.total ?? statistics?.total ?? 0,
+    today: stats?.today ?? statistics?.today ?? 0,
+    todayRevisitas: stats?.todayRevisitas ?? statistics?.todayRevisitas ?? 0,
+    todayStudies: stats?.todayStudies ?? statistics?.todayStudies ?? 0,
+    upcoming: stats?.upcoming ?? statistics?.upcoming ?? 0,
+    overdue: stats?.overdue ?? statistics?.overdue ?? 0,
+    found: stats?.found ?? statistics?.found ?? 0,
+    notFound: stats?.notFound ?? statistics?.notFound ?? 0,
+    couldNotGo: stats?.couldNotGo ?? statistics?.couldNotGo ?? 0,
+    totalCourses: stats?.totalCourses ?? statistics?.totalCourses ?? 0,
+    activeCourses: stats?.activeCourses ?? statistics?.activeCourses ?? 0,
+    pausedCourses: stats?.pausedCourses ?? statistics?.pausedCourses ?? 0,
+    completedCourses: stats?.completedCourses ?? statistics?.completedCourses ?? 0,
+    noContinuaCourses: stats?.noContinuaCourses ?? statistics?.noContinuaCourses ?? 0,
+    upcomingStudies: stats?.upcomingStudies ?? statistics?.upcomingStudies ?? 0,
+  };
+
+  const getTodaySubtitle = () => {
+    if (currentStats.todayStudies > 0 && currentStats.todayRevisitas > 0) {
+      return `${currentStats.todayRevisitas} rev. • ${currentStats.todayStudies} est.`;
+    }
+    if (currentStats.todayStudies > 0) {
+      return `${currentStats.todayStudies} ${currentStats.todayStudies === 1 ? 'estudio hoy' : 'estudios hoy'}`;
+    }
+    if (currentStats.todayRevisitas > 0) {
+      return `${currentStats.todayRevisitas} ${currentStats.todayRevisitas === 1 ? 'revisita hoy' : 'revisitas hoy'}`;
+    }
+    return '0 para hoy';
   };
 
   return (
@@ -38,27 +53,37 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
         type="button"
         id="stat-filter-hoy"
         onClick={() => onSelectFilter(activeFilter === 'HOY' ? 'TODAS' : 'HOY')}
-        className={`p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
+        className={`p-3 rounded-2xl border text-left transition-all active:scale-[0.98] cursor-pointer ${
           activeFilter === 'HOY'
             ? 'bg-amber-500 text-white border-amber-600 shadow-sm ring-2 ring-amber-400/40'
             : 'bg-white hover:bg-amber-50/50 border-slate-200 text-slate-800 shadow-2xs'
         }`}
       >
         <div className="flex items-center justify-between">
-          <span className={`text-[11px] font-bold uppercase tracking-wider ${
-            activeFilter === 'HOY' ? 'text-amber-100' : 'text-amber-800'
-          }`}>
-            HOY
-          </span>
+          <div className="flex items-center gap-1">
+            <span className={`text-[11px] font-bold uppercase tracking-wider ${
+              activeFilter === 'HOY' ? 'text-amber-100' : 'text-amber-800'
+            }`}>
+              HOY
+            </span>
+            {currentStats.todayStudies > 0 && (
+              <span className={`text-[9px] px-1 py-0.2 rounded font-extrabold flex items-center gap-0.5 ${
+                activeFilter === 'HOY' ? 'bg-amber-700/80 text-white' : 'bg-indigo-100 text-indigo-800'
+              }`} title={`${currentStats.todayStudies} estudio(s) hoy`}>
+                <BookOpen className="w-2.5 h-2.5" />
+                <span>{currentStats.todayStudies}</span>
+              </span>
+            )}
+          </div>
           <Clock className={`w-4 h-4 ${activeFilter === 'HOY' ? 'text-white' : 'text-amber-600'}`} />
         </div>
         <div className="text-2xl font-extrabold mt-1 tracking-tight">
           {currentStats.today}
         </div>
-        <div className={`text-[10px] mt-0.5 font-medium ${
-          activeFilter === 'HOY' ? 'text-amber-100' : 'text-slate-500'
+        <div className={`text-[10px] mt-0.5 font-semibold truncate ${
+          activeFilter === 'HOY' ? 'text-amber-100' : 'text-slate-600'
         }`}>
-          {currentStats.today === 1 ? '1 para hoy' : `${currentStats.today} para hoy`}
+          {getTodaySubtitle()}
         </div>
       </button>
 
@@ -67,7 +92,7 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
         type="button"
         id="stat-filter-proximas"
         onClick={() => onSelectFilter(activeFilter === 'PROXIMAS' ? 'TODAS' : 'PROXIMAS')}
-        className={`p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
+        className={`p-3 rounded-2xl border text-left transition-all active:scale-[0.98] cursor-pointer ${
           activeFilter === 'PROXIMAS'
             ? 'bg-teal-700 text-white border-teal-800 shadow-sm ring-2 ring-teal-600/40'
             : 'bg-white hover:bg-teal-50/50 border-slate-200 text-slate-800 shadow-2xs'
@@ -96,7 +121,7 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
         type="button"
         id="stat-filter-atrasadas"
         onClick={() => onSelectFilter(activeFilter === 'ATRASADAS' ? 'TODAS' : 'ATRASADAS')}
-        className={`p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
+        className={`p-3 rounded-2xl border text-left transition-all active:scale-[0.98] cursor-pointer ${
           activeFilter === 'ATRASADAS'
             ? 'bg-rose-700 text-white border-rose-800 shadow-sm ring-2 ring-rose-600/40'
             : 'bg-white hover:bg-rose-50/50 border-slate-200 text-slate-800 shadow-2xs'
@@ -125,7 +150,7 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
         type="button"
         id="stat-filter-visitadas"
         onClick={() => onSelectFilter(activeFilter === 'VISITADAS' ? 'TODAS' : 'VISITADAS')}
-        className={`p-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
+        className={`p-3 rounded-2xl border text-left transition-all active:scale-[0.98] cursor-pointer ${
           activeFilter === 'VISITADAS'
             ? 'bg-emerald-700 text-white border-emerald-800 shadow-sm ring-2 ring-emerald-600/40'
             : 'bg-white hover:bg-emerald-50/50 border-slate-200 text-slate-800 shadow-2xs'

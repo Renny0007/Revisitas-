@@ -2,7 +2,7 @@
  * Mis Revisitas - Definiciones de Tipos de Datos
  */
 
-export type AllowedDayOfWeek = 0 | 2 | 4 | 6; // 0 = Domingo, 2 = Martes, 4 = Jueves, 6 = Sábado
+export type AllowedDayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Domingo, 1 = Lunes, 2 = Martes, 3 = Miércoles, 4 = Jueves, 5 = Viernes, 6 = Sábado
 
 export type VisitResult = 'ENCONTRADA' | 'NO_ENCONTRADA' | 'NO_PUDE_IR' | 'SIN_REGISTRAR';
 
@@ -115,6 +115,8 @@ export interface BackupData {
 export interface Statistics {
   total: number;
   today: number;
+  todayRevisitas: number;
+  todayStudies: number;
   upcoming: number;
   overdue: number;
   found: number;

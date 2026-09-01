@@ -5,16 +5,16 @@
 
 import { AllowedDayOfWeek } from '../types';
 
-export const ALLOWED_DAYS: AllowedDayOfWeek[] = [2, 4, 6, 0]; // Martes, Jueves, Sábado, Domingo
+export const ALLOWED_DAYS: AllowedDayOfWeek[] = [0, 1, 2, 3, 4, 5, 6]; // Todos los días permitidos (Domingo a Sábado)
 
 export const DAY_NAMES_ES = [
-  'Domingo',    // 0 (Permitido)
-  'Lunes',      // 1 (Bloqueado)
-  'Martes',     // 2 (Permitido)
-  'Miércoles',  // 3 (Bloqueado)
-  'Jueves',     // 4 (Permitido)
-  'Viernes',    // 5 (Bloqueado)
-  'Sábado',     // 6 (Permitido)
+  'Domingo',    // 0
+  'Lunes',      // 1
+  'Martes',     // 2
+  'Miércoles',  // 3
+  'Jueves',     // 4
+  'Viernes',    // 5
+  'Sábado',     // 6
 ];
 
 export const MONTH_NAMES_ES = [
@@ -62,19 +62,19 @@ export function parseISODate(isoString: string): Date {
 }
 
 /**
- * Verifica si un día de la semana está permitido (Martes, Jueves, Sábado, Domingo)
+ * Verifica si un día de la semana es válido (Permite todos los días de la semana: Domingo a Sábado)
  */
 export function isAllowedDayOfWeek(dayIndex: number): boolean {
-  return dayIndex === 0 || dayIndex === 2 || dayIndex === 4 || dayIndex === 6;
+  return dayIndex >= 0 && dayIndex <= 6;
 }
 
 /**
- * Verifica si un string de fecha (YYYY-MM-DD) cae en un día permitido
+ * Verifica si un string de fecha (YYYY-MM-DD) es válido
  */
 export function isAllowedDateString(isoString: string): boolean {
   if (!isoString) return false;
   const date = parseISODate(isoString);
-  return isAllowedDayOfWeek(date.getDay());
+  return !isNaN(date.getTime());
 }
 
 /**
@@ -147,25 +147,16 @@ export function isDateFuture(scheduledISO: string): boolean {
 }
 
 /**
- * Encuentra la próxima fecha válida permitida (Martes, Jueves, Sábado, Domingo) a partir de una fecha base
+ * Obtiene la fecha sugerida para una nueva revisita o estudio (por defecto hoy o fecha base)
  */
 export function getNextAllowedDate(fromDate: Date = new Date()): string {
-  const candidate = new Date(fromDate);
-  // Si hoy es válido, sugerir hoy si no tiene hora pasada o buscar el siguiente
-  for (let i = 0; i <= 7; i++) {
-    const day = candidate.getDay();
-    if (isAllowedDayOfWeek(day)) {
-      return formatDateToISO(candidate);
-    }
-    candidate.setDate(candidate.getDate() + 1);
-  }
-  return formatDateToISO(candidate);
+  return formatDateToISO(fromDate);
 }
 
 /**
- * Genera una lista de las próximas N fechas válidas para selector rápido
+ * Genera una lista de las próximas N fechas para selector rápido
  */
-export function getUpcomingAllowedDates(count: number = 8, startDate: Date = new Date()): Array<{
+export function getUpcomingAllowedDates(count: number = 7, startDate: Date = new Date()): Array<{
   iso: string;
   formatted: string;
   dayName: string;
@@ -181,15 +172,13 @@ export function getUpcomingAllowedDates(count: number = 8, startDate: Date = new
   const todayISO = getTodayString();
 
   while (results.length < count) {
-    if (isAllowedDayOfWeek(current.getDay())) {
-      const iso = formatDateToISO(current);
-      results.push({
-        iso,
-        formatted: formatFullDateES(current),
-        dayName: DAY_NAMES_ES[current.getDay()],
-        isToday: iso === todayISO,
-      });
-    }
+    const iso = formatDateToISO(current);
+    results.push({
+      iso,
+      formatted: formatFullDateES(current),
+      dayName: DAY_NAMES_ES[current.getDay()],
+      isToday: iso === todayISO,
+    });
     current.setDate(current.getDate() + 1);
   }
 
@@ -197,7 +186,7 @@ export function getUpcomingAllowedDates(count: number = 8, startDate: Date = new
 }
 
 /**
- * Obtiene la siguiente fecha para un día específico permitido (Martes, Jueves, Sábado, Domingo)
+ * Obtiene la siguiente fecha para un día específico (0 = Domingo ... 6 = Sábado)
  */
 export function getNextSpecificAllowedDay(targetDay: AllowedDayOfWeek): string {
   const current = new Date();

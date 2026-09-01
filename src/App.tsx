@@ -4,6 +4,10 @@ import {
   Users, 
   Calendar, 
   BookOpenCheck, 
+  BookOpen,
+  MapPin,
+  Phone,
+  Edit3,
   Search, 
   Plus,
   Clock,
@@ -200,6 +204,8 @@ export default function App() {
     return calculateStatistics(persons) || {
       total: 0,
       today: 0,
+      todayRevisitas: 0,
+      todayStudies: 0,
       upcoming: 0,
       overdue: 0,
       found: 0,
@@ -218,6 +224,23 @@ export default function App() {
   const nonCoursePersons = useMemo(() => {
     return persons.filter(p => !p.isBibleCourse);
   }, [persons]);
+
+  // Bible studies scheduled for today
+  const todayStudiesList = useMemo(() => {
+    const todayStr = getTodayString();
+    const query = searchQuery.trim().toLowerCase();
+    return persons.filter((p) => {
+      const isCourse = p.isBibleCourse || (p.bibleCourse && p.bibleCourse.status === 'ACTIVO');
+      const isToday = p.bibleCourse?.nextStudyDate === todayStr && p.bibleCourse?.status === 'ACTIVO';
+      if (!isCourse || !isToday) return false;
+
+      if (!query) return true;
+      const matchName = p.name.toLowerCase().includes(query);
+      const matchAddress = p.address?.toLowerCase().includes(query);
+      const matchNotes = p.bibleCourse?.notes?.toLowerCase().includes(query) || false;
+      return matchName || matchAddress || matchNotes;
+    });
+  }, [persons, searchQuery]);
 
   const { todayList, overdueList, upcomingList, otherList } = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -278,7 +301,11 @@ export default function App() {
     };
   }, [nonCoursePersons, searchQuery, activeFilter]);
 
-  const totalFilteredCount = todayList.length + overdueList.length + upcomingList.length + otherList.length;
+  const totalFilteredCount = activeFilter === 'HOY'
+    ? todayList.length + todayStudiesList.length
+    : (activeFilter === 'TODAS'
+      ? todayList.length + todayStudiesList.length + overdueList.length + upcomingList.length + otherList.length
+      : todayList.length + overdueList.length + upcomingList.length + otherList.length);
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col justify-between font-sans text-slate-900 pb-16">
@@ -444,7 +471,11 @@ export default function App() {
                   <Users className="w-6 h-6" />
                 </div>
                 <h3 className="font-extrabold text-sm text-slate-800">
-                  {searchQuery ? 'No se encontraron resultados' : 'No hay revisitas en esta sección'}
+                  {searchQuery 
+                    ? 'No se encontraron resultados' 
+                    : (activeFilter === 'HOY' 
+                      ? 'No hay revisitas ni estudios bíblicos para hoy' 
+                      : 'No hay revisitas en esta sección')}
                 </h3>
                 <p className="text-xs text-slate-500 max-w-xs mx-auto">
                   {searchQuery 
@@ -462,12 +493,112 @@ export default function App() {
               </div>
             ) : (
               <div className="space-y-6">
+                {/* SECTION 0: ESTUDIOS BÍBLICOS PARA HOY */}
+                {(activeFilter === 'HOY' || activeFilter === 'TODAS') && todayStudiesList.length > 0 && (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between px-1">
+                      <div className="flex items-center gap-2 text-xs font-black text-indigo-900 uppercase tracking-wider">
+                        <BookOpenCheck className="w-4 h-4 text-indigo-700" />
+                        <span>Estudios Bíblicos para Hoy ({todayStudiesList.length})</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
+                        Cursos Activos
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {todayStudiesList.map((person) => {
+                        const course = person.bibleCourse;
+                        if (!course) return null;
+                        const pubLabel = (course.totalLessons && course.totalLessons <= 3)
+                          ? 'Folleto «Disfrute de la vida»' 
+                          : 'Libro «Disfrute de la vida»';
+                        const totalStudied = course.history?.length || 0;
+
+                        return (
+                          <div 
+                            key={`today-study-${person.id}`}
+                            className="bg-gradient-to-br from-indigo-50/70 via-white to-white rounded-2xl border-2 border-indigo-300/80 p-4 shadow-xs space-y-3"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-700 text-white shadow-xs">
+                                    📖 Curso Bíblico
+                                  </span>
+                                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-200">
+                                    Lección {course.currentLesson} • Punto {course.currentPoint}
+                                  </span>
+                                </div>
+                                <h4 className="text-base font-extrabold text-slate-900 tracking-tight">
+                                  {person.name}
+                                </h4>
+                                {person.address && (
+                                  <p className="text-xs text-slate-600 flex items-center gap-1 mt-0.5">
+                                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <span>{person.address}</span>
+                                  </p>
+                                )}
+                              </div>
+
+                              {person.phone && (
+                                <a
+                                  href={`tel:${person.phone}`}
+                                  className="p-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 transition-all shrink-0"
+                                  title={`Llamar a ${person.name}`}
+                                >
+                                  <Phone className="w-4 h-4" />
+                                </a>
+                              )}
+                            </div>
+
+                            <div className="bg-white/80 border border-indigo-100 rounded-xl p-2.5 text-xs text-slate-700 flex items-center justify-between gap-2">
+                              <span className="font-semibold text-indigo-950 truncate">
+                                📚 {pubLabel}
+                              </span>
+                              <span className="text-[11px] font-bold text-slate-500 shrink-0">
+                                Total: {totalStudied} sesiones registradas
+                              </span>
+                            </div>
+
+                            {course.notes && (
+                              <p className="text-xs text-slate-600 italic bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                "{course.notes}"
+                              </p>
+                            )}
+
+                            {/* Action buttons */}
+                            <div className="flex items-center gap-2 pt-1 border-t border-indigo-100">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedPersonForCourseDetail(person)}
+                                className="flex-1 py-2 px-3 bg-indigo-800 hover:bg-indigo-900 active:bg-slate-950 text-white font-extrabold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                              >
+                                <BookOpen className="w-3.5 h-3.5" />
+                                <span>Ver Curso</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedPersonForUpdateCourseProgress(person)}
+                                className="flex-1 py-2 px-3 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-extrabold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>Registrar Estudio</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* SECTION 1: REVISITAS PARA HOY */}
                 {todayList.length > 0 && (
                   <div className="space-y-2.5">
                     <div className="flex items-center gap-2 text-xs font-black text-amber-700 uppercase tracking-wider px-1">
                       <Clock className="w-4 h-4" />
-                      <span>Para Hoy ({todayList.length})</span>
+                      <span>Revisitas Para Hoy ({todayList.length})</span>
                     </div>
                     <div className="space-y-3">
                       {todayList.map((person) => (

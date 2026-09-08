@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { X, BookOpen, Calendar, Save, Plus, Minus, FileText, CheckCircle2 } from 'lucide-react';
 import { Person, CourseHistoryRecord, BibleCourseInfo } from '../types';
 import { 
+  DAYS_OF_WEEK_ORDER,
   formatDateToISO, 
   formatFullDateES, 
   formatShortDateES, 
   getDayName, 
   getNextAllowedDate, 
-  getTodayString 
+  getNextDateForDayName,
+  getTodayString,
+  normalizeDayName
 } from '../utils/dateUtils';
 import { generateUniqueId } from '../utils/storage';
 import { DatePickerAllowedDays } from './DatePickerAllowedDays';
@@ -37,6 +40,15 @@ export const UpdateCourseProgressModal: React.FC<UpdateCourseProgressModalProps>
   const [nextStudyDate, setNextStudyDate] = useState<string>(() => {
     return currentCourse.nextStudyDate || getNextAllowedDate();
   });
+  const [recurringDayName, setRecurringDayName] = useState<string>(() => {
+    return currentCourse.recurringDayName || currentCourse.nextStudyDayName || '';
+  });
+
+  const handleSelectDay = (dayName: string) => {
+    setRecurringDayName(dayName);
+    const calculatedDate = getNextDateForDayName(dayName);
+    setNextStudyDate(calculatedDate);
+  };
 
   const handleIncrementLesson = () => setLesson(prev => prev + 1);
   const handleDecrementLesson = () => setLesson(prev => Math.max(1, prev - 1));
@@ -49,6 +61,7 @@ export const UpdateCourseProgressModal: React.FC<UpdateCourseProgressModalProps>
     const studyDateFormatted = formatFullDateES(studyDate);
     const nextFormatted = nextStudyDate ? formatFullDateES(nextStudyDate) : undefined;
     const nextDayName = nextStudyDate ? getDayName(nextStudyDate) : undefined;
+    const finalRecurring = recurringDayName || nextDayName || currentCourse.recurringDayName;
 
     const newHistoryRecord: CourseHistoryRecord = {
       id: generateUniqueId(),
@@ -67,6 +80,7 @@ export const UpdateCourseProgressModal: React.FC<UpdateCourseProgressModalProps>
       nextStudyDate: nextStudyDate || undefined,
       nextStudyDateFormatted: nextFormatted,
       nextStudyDayName: nextDayName,
+      recurringDayName: finalRecurring,
       history: [...(currentCourse.history || []), newHistoryRecord],
     };
 
@@ -223,12 +237,48 @@ export const UpdateCourseProgressModal: React.FC<UpdateCourseProgressModalProps>
             />
           </div>
 
-          {/* Next Study Date Picker */}
-          <div className="pt-1">
+          {/* Next Study Date Picker and Day Selector */}
+          <div className="pt-1 space-y-2">
+            <div className="bg-indigo-50/70 p-3 rounded-xl border border-indigo-200/70 space-y-2">
+              <div className="text-[11px] font-extrabold uppercase text-slate-700 flex items-center justify-between">
+                <span>Día habitual de estudio:</span>
+                {recurringDayName && (
+                  <span className="text-indigo-700 capitalize font-bold">
+                    {recurringDayName}
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-7 gap-1">
+                {DAYS_OF_WEEK_ORDER.map((d) => {
+                  const isSelected = normalizeDayName(recurringDayName) === normalizeDayName(d.name);
+                  return (
+                    <button
+                      key={d.dayIndex}
+                      type="button"
+                      onClick={() => handleSelectDay(d.name)}
+                      className={`py-1.5 px-0.5 rounded-lg text-center transition-all flex flex-col items-center justify-center ${
+                        isSelected
+                          ? 'bg-indigo-700 text-white font-bold shadow-2xs ring-2 ring-indigo-400'
+                          : 'bg-white hover:bg-indigo-100 border border-slate-200 text-slate-700 font-semibold'
+                      }`}
+                    >
+                      <span className="text-[11px] leading-tight font-black">{d.short}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <DatePickerAllowedDays
-              label="📅 PRÓXIMO ESTUDIO:"
+              label="📅 PRÓXIMO ESTUDIO (Fecha exacta):"
               value={nextStudyDate}
-              onChange={setNextStudyDate}
+              onChange={(newDate) => {
+                setNextStudyDate(newDate);
+                if (newDate) {
+                  setRecurringDayName(getDayName(newDate));
+                }
+              }}
               required
             />
           </div>

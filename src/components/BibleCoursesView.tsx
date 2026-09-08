@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { CourseStatus, Person } from '../types';
 import { formatFullDateES } from '../utils/dateUtils';
+import { isBibleCourseDueToday } from '../utils/storage';
 
 interface BibleCoursesViewProps {
   persons: Person[];
@@ -218,6 +219,8 @@ export const BibleCoursesView: React.FC<BibleCoursesViewProps> = ({
 
             const totalLessons = course.totalLessons || 60;
             const progressPercent = Math.min(100, Math.round((course.currentLesson / totalLessons) * 100));
+            const isDueToday = isBibleCourseDueToday(person);
+            const studyDay = course.recurringDayName || course.nextStudyDayName;
 
             return (
               <div
@@ -238,12 +241,19 @@ export const BibleCoursesView: React.FC<BibleCoursesViewProps> = ({
                       </div>
                     </div>
 
-                    {/* Status Badge */}
-                    <div className="shrink-0">
+                    {/* Status Badges */}
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {isDueToday && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300 animate-pulse">
+                          <Sparkles className="w-3 h-3 text-amber-700" />
+                          ¡Toca hoy!
+                        </span>
+                      )}
+
                       {course.status === 'ACTIVO' && (
                         <span className="inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                          🟢 Curso activo
+                          🟢 Activo
                         </span>
                       )}
                       {course.status === 'PAUSADO' && (
@@ -290,12 +300,29 @@ export const BibleCoursesView: React.FC<BibleCoursesViewProps> = ({
                       />
                     </div>
 
-                    {/* Next study info */}
-                    <div className="flex items-center justify-between text-[11px] text-indigo-900 pt-1 border-t border-indigo-200/50">
-                      <span>📅 Próximo estudio:</span>
-                      <strong className="font-bold text-indigo-950 capitalize">
-                        {course.nextStudyDateFormatted || course.nextStudyDate || 'Por agendar'}
-                      </strong>
+                    {/* Next study info and study day tag */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-indigo-900 pt-1 border-t border-indigo-200/50 gap-1">
+                      <div className="flex items-center gap-1">
+                        <span>📅 Próximo estudio:</span>
+                        <strong className="font-bold text-indigo-950 capitalize">
+                          {course.nextStudyDateFormatted || course.nextStudyDate || 'Por agendar'}
+                        </strong>
+                      </div>
+
+                      {studyDay && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenCourseDetail(person);
+                          }}
+                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-white hover:bg-indigo-100 text-indigo-900 border border-indigo-200 self-start sm:self-auto transition-colors shadow-2xs"
+                          title="Toca para cambiar el día de estudio"
+                        >
+                          <span className="text-slate-500 font-semibold">Día:</span>
+                          <span className="font-black text-indigo-700 capitalize">{studyDay}</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

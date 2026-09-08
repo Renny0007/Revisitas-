@@ -186,10 +186,41 @@ export function getUpcomingAllowedDates(count: number = 7, startDate: Date = new
 }
 
 /**
- * Obtiene la siguiente fecha para un día específico (0 = Domingo ... 6 = Sábado)
+ * Lista ordenada de los 7 días de la semana para selectores (Lunes a Domingo)
  */
-export function getNextSpecificAllowedDay(targetDay: AllowedDayOfWeek): string {
-  const current = new Date();
+export const DAYS_OF_WEEK_ORDER = [
+  { dayIndex: 1, name: 'Lunes', short: 'Lun' },
+  { dayIndex: 2, name: 'Martes', short: 'Mar' },
+  { dayIndex: 3, name: 'Miércoles', short: 'Mié' },
+  { dayIndex: 4, name: 'Jueves', short: 'Jue' },
+  { dayIndex: 5, name: 'Viernes', short: 'Vie' },
+  { dayIndex: 6, name: 'Sábado', short: 'Sáb' },
+  { dayIndex: 0, name: 'Domingo', short: 'Dom' },
+];
+
+/**
+ * Normaliza un nombre de día quitando tildes y mayúsculas
+ */
+export function normalizeDayName(day: string): string {
+  if (!day) return '';
+  return day.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
+/**
+ * Obtiene el índice (0-6) a partir del nombre del día (ej: "Martes" -> 2)
+ */
+export function getDayIndexFromName(dayName: string): number {
+  const norm = normalizeDayName(dayName);
+  const found = DAYS_OF_WEEK_ORDER.find(d => normalizeDayName(d.name) === norm);
+  return found !== undefined ? found.dayIndex : 2; // Default a Martes si no coincide
+}
+
+/**
+ * Obtiene la siguiente fecha para un día específico (0 = Domingo ... 6 = Sábado).
+ * Si today coincide con targetDay, devuelve hoy.
+ */
+export function getNextSpecificAllowedDay(targetDay: AllowedDayOfWeek, fromDate: Date = new Date()): string {
+  const current = new Date(fromDate);
   for (let i = 0; i < 7; i++) {
     if (current.getDay() === targetDay) {
       return formatDateToISO(current);
@@ -198,3 +229,12 @@ export function getNextSpecificAllowedDay(targetDay: AllowedDayOfWeek): string {
   }
   return formatDateToISO(current);
 }
+
+/**
+ * Obtiene la siguiente fecha a partir del nombre del día (ej: "Martes")
+ */
+export function getNextDateForDayName(dayName: string, fromDate: Date = new Date()): string {
+  const dayIndex = getDayIndexFromName(dayName);
+  return getNextSpecificAllowedDay(dayIndex as AllowedDayOfWeek, fromDate);
+}
+

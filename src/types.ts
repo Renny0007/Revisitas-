@@ -65,6 +65,7 @@ export interface BibleCourseInfo {
   nextStudyDateFormatted?: string;     // ej: "Sábado 22 de agosto de 2026"
   nextStudyDayName?: string;           // "Sábado", etc.
   recurringDayName?: string;           // ej: "Martes" para estudios semanales habituales
+  studyTime?: string;                  // ej: "10:00 AM" o "16:30"
   notes?: string;                      // Notas generales del estudiante
   history: CourseHistoryRecord[];      // Historial de lecciones estudiadas
 }

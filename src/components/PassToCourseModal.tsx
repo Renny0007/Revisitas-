@@ -2,7 +2,15 @@ import React, { useState } from 'react';
 import { X, BookOpen, CheckCircle2, ShieldCheck, Calendar } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { BibleCourseInfo, Person } from '../types';
-import { formatFullDateES, getDayName, getNextAllowedDate, getTodayString } from '../utils/dateUtils';
+import { 
+  DAYS_OF_WEEK_ORDER, 
+  formatFullDateES, 
+  getDayName, 
+  getNextAllowedDate, 
+  getNextDateForDayName, 
+  getTodayString, 
+  normalizeDayName 
+} from '../utils/dateUtils';
 import { generateUniqueId } from '../utils/storage';
 
 interface PassToCourseModalProps {
@@ -24,6 +32,12 @@ export const PassToCourseModal: React.FC<PassToCourseModalProps> = ({
   const [startLesson, setStartLesson] = useState(1);
   const [startPoint, setStartPoint] = useState(1);
   const [initialNotes, setInitialNotes] = useState('');
+  const [studyDay, setStudyDay] = useState<string>(() => {
+    return person?.bibleCourse?.recurringDayName || 
+      person?.currentVisit?.scheduledDayName || 
+      person?.currentVisit?.recurringDayName || 
+      'Martes';
+  });
 
   if (!isOpen || !person) return null;
 
@@ -39,7 +53,7 @@ export const PassToCourseModal: React.FC<PassToCourseModalProps> = ({
       // safe fallback
     }
 
-    const nextAllowed = getNextAllowedDate();
+    const calculatedNextDate = getNextDateForDayName(studyDay);
     const todayFormatted = formatFullDateES(todayStr);
 
     // If person previously had course data, retain or merge
@@ -62,9 +76,10 @@ export const PassToCourseModal: React.FC<PassToCourseModalProps> = ({
       currentLesson: Number(startLesson) || 1,
       currentPoint: Number(startPoint) || 1,
       totalLessons: existingCourse?.totalLessons || 60,
-      nextStudyDate: nextAllowed,
-      nextStudyDateFormatted: formatFullDateES(nextAllowed),
-      nextStudyDayName: getDayName(nextAllowed),
+      nextStudyDate: calculatedNextDate,
+      nextStudyDateFormatted: formatFullDateES(calculatedNextDate),
+      nextStudyDayName: studyDay,
+      recurringDayName: studyDay,
       notes: initialNotes.trim() || existingCourse?.notes || '',
       history: existingCourse?.history?.length
         ? [...existingCourse.history, initialHistoryRecord]
@@ -177,6 +192,39 @@ export const PassToCourseModal: React.FC<PassToCourseModalProps> = ({
                 placeholder="Ej. Iniciamos con el libro 'Disfrute de la vida'"
                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400"
               />
+            </div>
+
+            {/* Selector de día semanal de estudio */}
+            <div className="pt-2 border-t border-slate-200">
+              <div className="text-[11px] font-extrabold uppercase text-slate-700 mb-1.5 flex items-center justify-between">
+                <div className="flex items-center gap-1 text-indigo-700">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Día en que le darás estudio:</span>
+                </div>
+                <span className="capitalize font-bold text-indigo-900">{studyDay}</span>
+              </div>
+              <p className="text-[10px] text-slate-500 mb-1.5 leading-tight">
+                Aparecerá en el botón «Hoy» cuando llegue este día.
+              </p>
+              <div className="grid grid-cols-7 gap-1">
+                {DAYS_OF_WEEK_ORDER.map((d) => {
+                  const isSelected = normalizeDayName(studyDay) === normalizeDayName(d.name);
+                  return (
+                    <button
+                      key={d.dayIndex}
+                      type="button"
+                      onClick={() => setStudyDay(d.name)}
+                      className={`py-1.5 px-0.5 rounded-lg text-center transition-all flex flex-col items-center justify-center ${
+                        isSelected
+                          ? 'bg-indigo-700 text-white font-black shadow-2xs ring-2 ring-indigo-400'
+                          : 'bg-white hover:bg-indigo-50 border border-slate-200 text-slate-700 font-semibold'
+                      }`}
+                    >
+                      <span className="text-[11px] font-extrabold">{d.short}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

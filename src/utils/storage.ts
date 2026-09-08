@@ -3,7 +3,7 @@
  */
 
 import { BackupData, Person, RevisitaStatus, Statistics, VisitHistoryRecord } from '../types';
-import { formatFullDateES, formatShortDateES, getDayName, getNextAllowedDate, getTodayString, isDateOverdue, isDateToday } from './dateUtils';
+import { formatFullDateES, formatShortDateES, getDayName, getNextAllowedDate, getTodayString, isDateOverdue, isDateToday, parseISODate } from './dateUtils';
 
 const STORAGE_KEY = 'mis_revisitas_personas_v1';
 const LAST_BACKUP_KEY = 'mis_revisitas_last_backup';
@@ -18,9 +18,133 @@ export function generateUniqueId(): string {
 }
 
 /**
+ * Determina si una revisita corresponde al día de hoy:
+ * 1. La fecha programada coincide exactamente con hoy (ej. 2026-09-08).
+ * 2. O el día programado / habitual coincide con el día de hoy (ej. "Martes" y hoy es martes)
+ *    y la visita sigue pendiente (sin registrar) o está agendada para este día de la semana.
+ */
+export function isRevisitaDueToday(person: Person): boolean {
+  if (!person || person.isBibleCourse || !person.currentVisit) {
+    return false;
+  }
+
+  const { currentVisit } = person;
+
+  // Si ya se registró el resultado (encontrada, no estaba, no pude ir), ya no está pendiente para hoy
+  if (currentVisit.result !== 'SIN_REGISTRAR') {
+    return false;
+  }
+
+  const todayStr = getTodayString();
+  const todayDayName = getDayName(todayStr).toLowerCase(); // ej: "martes"
+  const todayDate = parseISODate(todayStr);
+  const todayDayOfWeek = todayDate.getDay(); // 0 = Domingo ... 6 = Sábado
+
+  // 1. Coincidencia exacta de fecha
+  if (currentVisit.scheduledDate === todayStr) {
+    return true;
+  }
+
+  // 2. Coincidencia por día de la semana (ej: visito a alguien los martes y hoy es martes)
+  const schedDay = currentVisit.scheduledDayName?.trim().toLowerCase();
+  const recurringDay = currentVisit.recurringDayName?.trim().toLowerCase();
+  const matchesDayName = schedDay === todayDayName || recurringDay === todayDayName;
+
+  let matchesDayOfWeek = false;
+  if (currentVisit.scheduledDate) {
+    try {
+      const visitDate = parseISODate(currentVisit.scheduledDate);
+      matchesDayOfWeek = visitDate.getDay() === todayDayOfWeek;
+    } catch {
+      // ignore
+    }
+  }
+
+  if (matchesDayName || matchesDayOfWeek) {
+    // Si está programada para hoy o pendiente de este día de la semana, corresponde atender hoy
+    if (!currentVisit.scheduledDate || currentVisit.scheduledDate <= todayStr || matchesDayName) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Determina si un curso bíblico corresponde al día de hoy:
+ * 1. Es un curso activo.
+ * 2. La fecha del próximo estudio coincide con hoy.
+ * 3. O el día programado / habitual coincide con el día de hoy (ej. "Martes" y hoy es martes).
+ * 4. Y no se ha registrado ya una lección hoy en el historial.
+ */
+export function isBibleCourseDueToday(person: Person): boolean {
+  if (!person) return false;
+  const isCourse = person.isBibleCourse || Boolean(person.bibleCourse);
+  if (!isCourse || !person.bibleCourse) return false;
+
+  const course = person.bibleCourse;
+  if (course.status !== 'ACTIVO') return false;
+
+  const todayStr = getTodayString();
+  const todayDayName = getDayName(todayStr).toLowerCase();
+  const todayDate = parseISODate(todayStr);
+  const todayDayOfWeek = todayDate.getDay();
+
+  // Si ya se registró el estudio de hoy en el historial, ya se cumplió hoy
+  if (course.history && course.history.length > 0) {
+    const hasStudiedToday = course.history.some(h => h.date === todayStr);
+    if (hasStudiedToday) {
+      return false;
+    }
+  }
+
+  // 1. Coincidencia exacta de fecha
+  if (course.nextStudyDate === todayStr) {
+    return true;
+  }
+
+  // 2. Coincidencia por día de la semana (ej: estudio los martes y hoy es martes)
+  const studyDay = course.nextStudyDayName?.trim().toLowerCase();
+  const recurringDay = course.recurringDayName?.trim().toLowerCase();
+  const matchesDayName = studyDay === todayDayName || recurringDay === todayDayName;
+
+  let matchesDayOfWeek = false;
+  if (course.nextStudyDate) {
+    try {
+      const nextDate = parseISODate(course.nextStudyDate);
+      matchesDayOfWeek = nextDate.getDay() === todayDayOfWeek;
+    } catch {
+      // ignore
+    }
+  }
+
+  if (matchesDayName || matchesDayOfWeek) {
+    if (!course.nextStudyDate || course.nextStudyDate <= todayStr || matchesDayName) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
  * Determina el estado actual de una persona
  */
 export function getPersonStatus(person: Person): RevisitaStatus {
+  if (!person) return 'PROXIMA';
+
+  // Si es un curso bíblico activo
+  if (person.isBibleCourse && person.bibleCourse) {
+    if (isBibleCourseDueToday(person)) {
+      return 'HOY';
+    }
+    const nextDate = person.bibleCourse.nextStudyDate;
+    if (nextDate && isDateOverdue(nextDate)) {
+      return 'ATRASADA';
+    }
+    return 'PROXIMA';
+  }
+
   const { currentVisit } = person;
   if (!currentVisit) return 'PROXIMA';
 
@@ -35,7 +159,7 @@ export function getPersonStatus(person: Person): RevisitaStatus {
   }
 
   // Result is SIN_REGISTRAR / PENDIENTE
-  if (isDateToday(currentVisit.scheduledDate)) {
+  if (isRevisitaDueToday(person)) {
     return 'HOY';
   }
   if (isDateOverdue(currentVisit.scheduledDate)) {
@@ -207,7 +331,45 @@ export function loadPersonsFromStorage(): Person[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed;
+      // Si existen registros de muestra (sample_1 o sample_2), mantener sus fechas dinámicas si no fueron editados
+      const todayStr = getTodayString();
+      let updated = false;
+      const normalized = parsed.map((p) => {
+        if (p.id === 'sample_1' && p.currentVisit && p.currentVisit.result === 'SIN_REGISTRAR') {
+          if (p.currentVisit.scheduledDate !== todayStr) {
+            updated = true;
+            return {
+              ...p,
+              currentVisit: {
+                ...p.currentVisit,
+                scheduledDate: todayStr,
+                scheduledDateFormatted: formatFullDateES(todayStr),
+                scheduledDayName: getDayName(todayStr),
+              },
+            };
+          }
+        }
+        if (p.id === 'sample_2' && p.bibleCourse && p.bibleCourse.status === 'ACTIVO') {
+          if (p.bibleCourse.nextStudyDate !== todayStr) {
+            updated = true;
+            return {
+              ...p,
+              bibleCourse: {
+                ...p.bibleCourse,
+                nextStudyDate: todayStr,
+                nextStudyDateFormatted: formatFullDateES(todayStr),
+                nextStudyDayName: getDayName(todayStr),
+              },
+            };
+          }
+        }
+        return p;
+      });
+
+      if (updated) {
+        savePersonsToStorage(normalized);
+      }
+      return normalized;
     }
     return [];
   } catch (error) {
@@ -296,12 +458,10 @@ export function calculateStatistics(persons: Person[]): Statistics {
       const cStatus = person.bibleCourse.status;
       if (cStatus === 'ACTIVO') {
         activeCourses++;
-        if (person.bibleCourse.nextStudyDate) {
-          if (person.bibleCourse.nextStudyDate === todayStr) {
-            todayStudiesCount++;
-          } else if (person.bibleCourse.nextStudyDate > todayStr) {
-            upcomingStudies++;
-          }
+        if (isBibleCourseDueToday(person)) {
+          todayStudiesCount++;
+        } else if (person.bibleCourse.nextStudyDate && person.bibleCourse.nextStudyDate > todayStr) {
+          upcomingStudies++;
         }
       } else if (cStatus === 'PAUSADO') {
         pausedCourses++;

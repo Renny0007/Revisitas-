@@ -3,34 +3,33 @@ import { FilterType, Statistics } from '../types';
 import { Clock, Calendar, AlertTriangle, CheckCircle2, BookOpen } from 'lucide-react';
 
 interface StatsSummaryProps {
-  stats?: Statistics;
-  statistics?: Statistics;
-  activeFilter: FilterType;
-  onSelectFilter: (filter: FilterType) => void;
+  stats?: Partial<Statistics> | null;
+  statistics?: Partial<Statistics> | null;
+  activeFilter?: FilterType;
+  onSelectFilter?: (filter: FilterType) => void;
 }
 
-export const StatsSummary: React.FC<StatsSummaryProps> = ({
-  stats,
-  statistics,
-  activeFilter,
-  onSelectFilter,
-}) => {
+export const StatsSummary: React.FC<StatsSummaryProps> = (props) => {
+  const stats = props?.stats || props?.statistics || {};
+  const activeFilter = props?.activeFilter || 'TODAS';
+  const onSelectFilter = props?.onSelectFilter || (() => {});
+
   const currentStats = {
-    total: stats?.total ?? statistics?.total ?? 0,
-    today: stats?.today ?? statistics?.today ?? 0,
-    todayRevisitas: stats?.todayRevisitas ?? statistics?.todayRevisitas ?? 0,
-    todayStudies: stats?.todayStudies ?? statistics?.todayStudies ?? 0,
-    upcoming: stats?.upcoming ?? statistics?.upcoming ?? 0,
-    overdue: stats?.overdue ?? statistics?.overdue ?? 0,
-    found: stats?.found ?? statistics?.found ?? 0,
-    notFound: stats?.notFound ?? statistics?.notFound ?? 0,
-    couldNotGo: stats?.couldNotGo ?? statistics?.couldNotGo ?? 0,
-    totalCourses: stats?.totalCourses ?? statistics?.totalCourses ?? 0,
-    activeCourses: stats?.activeCourses ?? statistics?.activeCourses ?? 0,
-    pausedCourses: stats?.pausedCourses ?? statistics?.pausedCourses ?? 0,
-    completedCourses: stats?.completedCourses ?? statistics?.completedCourses ?? 0,
-    noContinuaCourses: stats?.noContinuaCourses ?? statistics?.noContinuaCourses ?? 0,
-    upcomingStudies: stats?.upcomingStudies ?? statistics?.upcomingStudies ?? 0,
+    total: Number(stats?.total ?? 0),
+    today: Number(stats?.today ?? 0),
+    todayRevisitas: Number(stats?.todayRevisitas ?? 0),
+    todayStudies: Number(stats?.todayStudies ?? 0),
+    upcoming: Number(stats?.upcoming ?? 0),
+    overdue: Number(stats?.overdue ?? 0),
+    found: Number(stats?.found ?? 0),
+    notFound: Number(stats?.notFound ?? 0),
+    couldNotGo: Number(stats?.couldNotGo ?? 0),
+    totalCourses: Number(stats?.totalCourses ?? 0),
+    activeCourses: Number(stats?.activeCourses ?? 0),
+    pausedCourses: Number(stats?.pausedCourses ?? 0),
+    completedCourses: Number(stats?.completedCourses ?? 0),
+    noContinuaCourses: Number(stats?.noContinuaCourses ?? 0),
+    upcomingStudies: Number(stats?.upcomingStudies ?? 0),
   };
 
   const getTodaySubtitle = () => {

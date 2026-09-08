@@ -25,6 +25,7 @@ import {
   DAY_NAMES_ES 
 } from '../utils/dateUtils';
 import { RevisitaCard } from './RevisitaCard';
+import { isRevisitaDueToday, isBibleCourseDueToday } from '../utils/storage';
 
 interface CalendarViewProps {
   persons: Person[];
@@ -119,13 +120,29 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       const sDate = person.bibleCourse.nextStudyDate;
       if (sDate) {
         if (!coursesByDate[sDate]) coursesByDate[sDate] = [];
-        coursesByDate[sDate].push(person);
+        if (!coursesByDate[sDate].some(p => p.id === person.id)) {
+          coursesByDate[sDate].push(person);
+        }
+      }
+      if (isBibleCourseDueToday(person)) {
+        if (!coursesByDate[todayStr]) coursesByDate[todayStr] = [];
+        if (!coursesByDate[todayStr].some(p => p.id === person.id)) {
+          coursesByDate[todayStr].push(person);
+        }
       }
     } else {
       const sDate = person.currentVisit?.scheduledDate;
       if (sDate) {
         if (!revisitasByDate[sDate]) revisitasByDate[sDate] = [];
-        revisitasByDate[sDate].push(person);
+        if (!revisitasByDate[sDate].some(p => p.id === person.id)) {
+          revisitasByDate[sDate].push(person);
+        }
+      }
+      if (isRevisitaDueToday(person)) {
+        if (!revisitasByDate[todayStr]) revisitasByDate[todayStr] = [];
+        if (!revisitasByDate[todayStr].some(p => p.id === person.id)) {
+          revisitasByDate[todayStr].push(person);
+        }
       }
     }
   }

@@ -41,6 +41,7 @@ export interface CurrentVisitInfo {
   actualVisitDateFormatted?: string;   // ej: "20 de agosto de 2026"
   resultRegisteredAt?: string;         // ISO timestamp
   resultNotes?: string;
+  recurringDayName?: string;           // ej: "Martes" para visitas programadas o habituales
 }
 
 export interface CourseHistoryRecord {
@@ -63,6 +64,7 @@ export interface BibleCourseInfo {
   nextStudyDate?: string;              // YYYY-MM-DD (allowed days: Mar, Jue, Sáb, Dom)
   nextStudyDateFormatted?: string;     // ej: "Sábado 22 de agosto de 2026"
   nextStudyDayName?: string;           // "Sábado", etc.
+  recurringDayName?: string;           // ej: "Martes" para estudios semanales habituales
   notes?: string;                      // Notas generales del estudiante
   history: CourseHistoryRecord[];      // Historial de lecciones estudiadas
 }

@@ -3,7 +3,7 @@
  */
 
 import { Person } from '../types';
-import { getPersonStatus } from './storage';
+import { getPersonStatus, isBibleCourseDueToday } from './storage';
 import { getTodayString } from './dateUtils';
 
 export function isNotificationSupported(): boolean {
@@ -56,7 +56,7 @@ export function sendLocalNotification(title: string, options?: NotificationOptio
 export function checkAndNotifyTodayVisits(persons: Person[]): number {
   const todayStr = getTodayString();
   const todayVisits = persons.filter(p => !p.isBibleCourse && getPersonStatus(p) === 'HOY');
-  const todayStudies = persons.filter(p => (p.isBibleCourse || p.bibleCourse) && p.bibleCourse?.status === 'ACTIVO' && p.bibleCourse?.nextStudyDate === todayStr);
+  const todayStudies = persons.filter(p => isBibleCourseDueToday(p));
   
   const totalCount = todayVisits.length + todayStudies.length;
   if (totalCount === 0) return 0;

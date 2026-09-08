@@ -20,7 +20,8 @@ import {
   loadPersonsFromStorage, 
   savePersonsToStorage, 
   calculateStatistics,
-  getPersonStatus 
+  getPersonStatus,
+  isBibleCourseDueToday
 } from './utils/storage';
 import { checkAndNotifyTodayVisits } from './utils/notifications';
 import { 
@@ -227,12 +228,10 @@ export default function App() {
 
   // Bible studies scheduled for today
   const todayStudiesList = useMemo(() => {
-    const todayStr = getTodayString();
     const query = searchQuery.trim().toLowerCase();
     return persons.filter((p) => {
-      const isCourse = p.isBibleCourse || (p.bibleCourse && p.bibleCourse.status === 'ACTIVO');
-      const isToday = p.bibleCourse?.nextStudyDate === todayStr && p.bibleCourse?.status === 'ACTIVO';
-      if (!isCourse || !isToday) return false;
+      const isToday = isBibleCourseDueToday(p);
+      if (!isToday) return false;
 
       if (!query) return true;
       const matchName = p.name.toLowerCase().includes(query);

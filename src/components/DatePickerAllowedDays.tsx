@@ -31,7 +31,7 @@ export const DatePickerAllowedDays: React.FC<DatePickerAllowedDaysProps> = ({
   });
 
   const todayStr = getTodayString();
-  const upcomingList = getUpcomingAllowedDates(6);
+  const upcomingList = getUpcomingAllowedDates(7);
 
   // Month navigation
   const currentYear = viewDate.getFullYear();
@@ -80,9 +80,6 @@ export const DatePickerAllowedDays: React.FC<DatePickerAllowedDaysProps> = ({
         <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
           {label} {required && <span className="text-rose-500">*</span>}
         </label>
-        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
-          Todos los días disponibles
-        </span>
       </div>
 
       {/* Selected Date Summary Banner */}

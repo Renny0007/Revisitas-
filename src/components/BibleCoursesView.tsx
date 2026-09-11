@@ -25,6 +25,7 @@ interface BibleCoursesViewProps {
   onOpenCourseDetail: (person: Person) => void;
   onOpenUpdateProgress: (person: Person) => void;
   onOpenNewRevisita: () => void;
+  onOpenNewCourse?: () => void;
 }
 
 export const BibleCoursesView: React.FC<BibleCoursesViewProps> = ({
@@ -32,6 +33,7 @@ export const BibleCoursesView: React.FC<BibleCoursesViewProps> = ({
   onOpenCourseDetail,
   onOpenUpdateProgress,
   onOpenNewRevisita,
+  onOpenNewCourse,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'TODOS' | CourseStatus>('TODOS');
@@ -93,9 +95,20 @@ export const BibleCoursesView: React.FC<BibleCoursesViewProps> = ({
             </div>
           </div>
 
-          <div className="text-right bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
-            <div className="text-base font-black text-white">{counts.activos}</div>
-            <div className="text-[10px] font-bold text-indigo-200 uppercase">Activos</div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              id="btn-nuevo-curso-biblico-header"
+              onClick={onOpenNewCourse || onOpenNewRevisita}
+              className="py-1.5 px-3 rounded-xl bg-white text-indigo-900 hover:bg-indigo-50 active:bg-indigo-100 font-extrabold text-xs shadow-xs flex items-center gap-1 transition-all cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5 text-indigo-700" />
+              <span>Nuevo Curso</span>
+            </button>
+            <div className="text-right bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
+              <div className="text-base font-black text-white">{counts.activos}</div>
+              <div className="text-[10px] font-bold text-indigo-200 uppercase">Activos</div>
+            </div>
           </div>
         </div>
       </div>
@@ -208,9 +221,20 @@ export const BibleCoursesView: React.FC<BibleCoursesViewProps> = ({
             </h3>
             <p className="text-xs text-slate-500 max-w-xs mx-auto mb-4">
               {courseStudents.length === 0
-                ? 'Puedes pasar a cualquier persona de tus revisitas a "Cursos bíblicos" marcando la casilla "☐ PASÓ A CURSO BÍBLICO" en su tarjeta.'
+                ? 'Puedes registrar un nuevo curso bíblico directamente o pasar una persona de tus revisitas.'
                 : 'Intenta limpiar el buscador o seleccionar otro filtro de estado.'}
             </p>
+            {courseStudents.length === 0 && (
+              <button
+                type="button"
+                id="btn-empty-nuevo-curso"
+                onClick={onOpenNewCourse || onOpenNewRevisita}
+                className="px-4 py-2.5 bg-indigo-700 hover:bg-indigo-800 active:bg-indigo-900 text-white text-xs font-bold rounded-xl shadow-xs inline-flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Registrar Nuevo Curso Bíblico</span>
+              </button>
+            )}
           </div>
         ) : (
           filteredStudents.map((person) => {

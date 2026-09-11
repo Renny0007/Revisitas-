@@ -31,9 +31,9 @@ export interface VisitHistoryRecord {
 }
 
 export interface CurrentVisitInfo {
-  scheduledDate: string;               // YYYY-MM-DD (must be Tue, Thu, Sat or Sun)
+  scheduledDate: string;               // YYYY-MM-DD (Cualquier día de lunes a domingo)
   scheduledDateFormatted: string;      // ej: "Jueves 20 de agosto de 2026"
-  scheduledDayName: string;            // "Martes" | "Jueves" | "Sábado" | "Domingo"
+  scheduledDayName: string;            // Día de la semana en español
   topicSpoken: string;                 // Tema del que hablamos
   topicPending: string;                // Tema que quedó pendiente
   result: VisitResult;                 // 'SIN_REGISTRAR' | 'ENCONTRADA' | 'NO_ENCONTRADA'
@@ -41,7 +41,7 @@ export interface CurrentVisitInfo {
   actualVisitDateFormatted?: string;   // ej: "20 de agosto de 2026"
   resultRegisteredAt?: string;         // ISO timestamp
   resultNotes?: string;
-  recurringDayName?: string;           // ej: "Martes" para visitas programadas o habituales
+  recurringDayName?: string;           // Día programado habitual (ej: "Lunes", "Martes", etc.)
 }
 
 export interface CourseHistoryRecord {
@@ -61,10 +61,10 @@ export interface BibleCourseInfo {
   currentLesson: number;               // Lección actual (ej: 5)
   currentPoint: number;                // Punto actual (ej: 1)
   totalLessons: number;                // Total de lecciones estimadas (por defecto 60)
-  nextStudyDate?: string;              // YYYY-MM-DD (allowed days: Mar, Jue, Sáb, Dom)
+  nextStudyDate?: string;              // YYYY-MM-DD (Cualquier día de lunes a domingo)
   nextStudyDateFormatted?: string;     // ej: "Sábado 22 de agosto de 2026"
-  nextStudyDayName?: string;           // "Sábado", etc.
-  recurringDayName?: string;           // ej: "Martes" para estudios semanales habituales
+  nextStudyDayName?: string;           // Nombre del día en español
+  recurringDayName?: string;           // Día recurrente semanal habitual (ej: "Lunes", "Martes", etc.)
   studyTime?: string;                  // ej: "10:00 AM" o "16:30"
   notes?: string;                      // Notas generales del estudiante
   history: CourseHistoryRecord[];      // Historial de lecciones estudiadas

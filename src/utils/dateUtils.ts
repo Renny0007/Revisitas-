@@ -1,6 +1,6 @@
 /**
  * Utilidades de fecha para MIS REVISITAS
- * Regla fundamental: Sólo se permiten MARTES (2), JUEVES (4), SÁBADO (6) y DOMINGO (0).
+ * Permite programar cualquier día de la semana (Lunes a Domingo).
  */
 
 import { AllowedDayOfWeek } from '../types';
@@ -212,7 +212,7 @@ export function normalizeDayName(day: string): string {
 export function getDayIndexFromName(dayName: string): number {
   const norm = normalizeDayName(dayName);
   const found = DAYS_OF_WEEK_ORDER.find(d => normalizeDayName(d.name) === norm);
-  return found !== undefined ? found.dayIndex : 2; // Default a Martes si no coincide
+  return found !== undefined ? found.dayIndex : new Date().getDay();
 }
 
 /**

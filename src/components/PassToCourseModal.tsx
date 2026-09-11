@@ -36,10 +36,30 @@ export const PassToCourseModal: React.FC<PassToCourseModalProps> = ({
     return person?.bibleCourse?.recurringDayName || 
       person?.currentVisit?.scheduledDayName || 
       person?.currentVisit?.recurringDayName || 
-      'Martes';
+      getDayName(getTodayString());
+  });
+  const [exactDate, setExactDate] = useState<string>(() => {
+    const initialDay = person?.bibleCourse?.recurringDayName || 
+      person?.currentVisit?.scheduledDayName || 
+      person?.currentVisit?.recurringDayName || 
+      getDayName(getTodayString());
+    return getNextDateForDayName(initialDay);
   });
 
   if (!isOpen || !person) return null;
+
+  const handleDaySelect = (dayName: string) => {
+    setStudyDay(dayName);
+    const next = getNextDateForDayName(dayName);
+    setExactDate(next);
+  };
+
+  const handleDateChange = (dateVal: string) => {
+    setExactDate(dateVal);
+    if (dateVal) {
+      setStudyDay(getDayName(dateVal));
+    }
+  };
 
   const handleConfirm = () => {
     try {
@@ -53,7 +73,8 @@ export const PassToCourseModal: React.FC<PassToCourseModalProps> = ({
       // safe fallback
     }
 
-    const calculatedNextDate = getNextDateForDayName(studyDay);
+    const calculatedNextDate = exactDate || getNextDateForDayName(studyDay);
+    const finalDayName = getDayName(calculatedNextDate);
     const todayFormatted = formatFullDateES(todayStr);
 
     // If person previously had course data, retain or merge
@@ -78,8 +99,8 @@ export const PassToCourseModal: React.FC<PassToCourseModalProps> = ({
       totalLessons: existingCourse?.totalLessons || 60,
       nextStudyDate: calculatedNextDate,
       nextStudyDateFormatted: formatFullDateES(calculatedNextDate),
-      nextStudyDayName: studyDay,
-      recurringDayName: studyDay,
+      nextStudyDayName: finalDayName,
+      recurringDayName: studyDay || finalDayName,
       notes: initialNotes.trim() || existingCourse?.notes || '',
       history: existingCourse?.history?.length
         ? [...existingCourse.history, initialHistoryRecord]
@@ -213,7 +234,7 @@ export const PassToCourseModal: React.FC<PassToCourseModalProps> = ({
                     <button
                       key={d.dayIndex}
                       type="button"
-                      onClick={() => setStudyDay(d.name)}
+                      onClick={() => handleDaySelect(d.name)}
                       className={`py-1.5 px-0.5 rounded-lg text-center transition-all flex flex-col items-center justify-center ${
                         isSelected
                           ? 'bg-indigo-700 text-white font-black shadow-2xs ring-2 ring-indigo-400'
@@ -224,6 +245,17 @@ export const PassToCourseModal: React.FC<PassToCourseModalProps> = ({
                     </button>
                   );
                 })}
+              </div>
+
+              {/* Fecha calculada y selector de fecha */}
+              <div className="mt-2.5 flex items-center justify-between text-[11px] bg-indigo-50/80 p-2 rounded-xl border border-indigo-100">
+                <span className="text-indigo-950 font-semibold">Próxima cita de estudio:</span>
+                <input
+                  type="date"
+                  value={exactDate}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  className="bg-white border border-indigo-200 rounded-lg px-2 py-1 text-xs font-black text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                />
               </div>
             </div>
           </div>

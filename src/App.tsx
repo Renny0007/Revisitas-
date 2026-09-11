@@ -26,8 +26,7 @@ import {
 import { checkAndNotifyTodayVisits } from './utils/notifications';
 import { 
   getTodayString, 
-  formatFullDateES,
-  isAllowedDateString 
+  formatFullDateES 
 } from './utils/dateUtils';
 
 // Subcomponents
@@ -63,6 +62,7 @@ export default function App() {
   // Modals state
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [newModalInitialDate, setNewModalInitialDate] = useState<string | undefined>(undefined);
+  const [newModalInitialIsCourse, setNewModalInitialIsCourse] = useState<boolean>(false);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
@@ -194,9 +194,10 @@ export default function App() {
     showToast(`${updatedPerson.name} volvió a la lista de revisitas.`);
   };
 
-  // Open New Modal with optional default date
-  const handleOpenNewWithDate = (date?: string) => {
+  // Open New Modal with optional default date and course flag
+  const handleOpenNewWithDate = (date?: string, isCourse: boolean = false) => {
     setNewModalInitialDate(date);
+    setNewModalInitialIsCourse(isCourse);
     setIsNewModalOpen(true);
   };
 
@@ -742,6 +743,7 @@ export default function App() {
             onOpenCourseDetail={setSelectedPersonForCourseDetail}
             onOpenUpdateProgress={setSelectedPersonForUpdateCourseProgress}
             onOpenNewRevisita={() => handleOpenNewWithDate(undefined)}
+            onOpenNewCourse={() => handleOpenNewWithDate(undefined, true)}
           />
         )}
 
@@ -805,12 +807,13 @@ export default function App() {
         onDataReloaded={handleDataReloaded}
       />
 
-      {/* MODAL: NUEVA REVISITA */}
+      {/* MODAL: NUEVA REVISITA / NUEVO CURSO */}
       <NewRevisitaModal
         isOpen={isNewModalOpen}
         onClose={() => setIsNewModalOpen(false)}
         onSave={handleSaveNewPerson}
         initialDate={newModalInitialDate}
+        initialIsCourse={newModalInitialIsCourse}
       />
 
       {/* MODAL: EDITAR PERSONA */}

@@ -10,6 +10,7 @@ interface NewRevisitaModalProps {
   onClose: () => void;
   onSave: (person: Person) => void;
   initialDate?: string;
+  initialIsCourse?: boolean;
 }
 
 export const NewRevisitaModal: React.FC<NewRevisitaModalProps> = ({
@@ -17,9 +18,13 @@ export const NewRevisitaModal: React.FC<NewRevisitaModalProps> = ({
   onClose,
   onSave,
   initialDate,
+  initialIsCourse = false,
 }) => {
   const defaultDate = initialDate && isAllowedDateString(initialDate) ? initialDate : getNextAllowedDate();
 
+  const [isBibleCourseDirect, setIsBibleCourseDirect] = useState(initialIsCourse);
+  const [courseLesson, setCourseLesson] = useState(1);
+  const [coursePoint, setCoursePoint] = useState(1);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
@@ -29,6 +34,16 @@ export const NewRevisitaModal: React.FC<NewRevisitaModalProps> = ({
   const [scheduledDate, setScheduledDate] = useState(defaultDate);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Sync state if initialIsCourse changes when opening
+  React.useEffect(() => {
+    if (isOpen) {
+      setIsBibleCourseDirect(initialIsCourse);
+      if (initialDate && isAllowedDateString(initialDate)) {
+        setScheduledDate(initialDate);
+      }
+    }
+  }, [isOpen, initialIsCourse, initialDate]);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -37,8 +52,8 @@ export const NewRevisitaModal: React.FC<NewRevisitaModalProps> = ({
 
     const trimmedName = name.trim();
     const trimmedAddress = address.trim();
-    const trimmedTopicSpoken = topicSpoken.trim();
-    const trimmedTopicPending = topicPending.trim();
+    const trimmedTopicSpoken = topicSpoken.trim() || (isBibleCourseDirect ? `Lección ${courseLesson}` : '');
+    const trimmedTopicPending = topicPending.trim() || (isBibleCourseDirect ? `Punto ${coursePoint}` : '');
 
     if (!trimmedName) {
       setErrorMessage('Por favor ingresa el nombre de la persona.');
@@ -50,18 +65,18 @@ export const NewRevisitaModal: React.FC<NewRevisitaModalProps> = ({
       return;
     }
 
-    if (!trimmedTopicSpoken) {
+    if (!isBibleCourseDirect && !trimmedTopicSpoken) {
       setErrorMessage('Por favor ingresa el tema del que hablaron.');
       return;
     }
 
-    if (!trimmedTopicPending) {
+    if (!isBibleCourseDirect && !trimmedTopicPending) {
       setErrorMessage('Por favor ingresa el tema que quedó pendiente para la próxima visita.');
       return;
     }
 
     if (!scheduledDate || !isAllowedDateString(scheduledDate)) {
-      setErrorMessage('Por favor selecciona una fecha para la revisita.');
+      setErrorMessage('Por favor selecciona una fecha para la cita.');
       return;
     }
 
@@ -76,6 +91,7 @@ export const NewRevisitaModal: React.FC<NewRevisitaModalProps> = ({
       notes: notes.trim() || undefined,
       createdAt: nowIso,
       updatedAt: nowIso,
+      isBibleCourse: isBibleCourseDirect,
       currentVisit: {
         scheduledDate: scheduledDate,
         scheduledDateFormatted: formatFullDateES(scheduledDate),
@@ -84,6 +100,30 @@ export const NewRevisitaModal: React.FC<NewRevisitaModalProps> = ({
         topicPending: trimmedTopicPending,
         result: 'SIN_REGISTRAR',
       },
+      bibleCourse: isBibleCourseDirect ? {
+        courseStartedAt: scheduledDate,
+        courseStartedAtFormatted: formatFullDateES(scheduledDate),
+        status: 'ACTIVO',
+        currentLesson: Number(courseLesson) || 1,
+        currentPoint: Number(coursePoint) || 1,
+        totalLessons: 60,
+        nextStudyDate: scheduledDate,
+        nextStudyDateFormatted: formatFullDateES(scheduledDate),
+        nextStudyDayName: dayName,
+        recurringDayName: dayName,
+        notes: notes.trim() || undefined,
+        history: [
+          {
+            id: generateUniqueId(),
+            lesson: Number(courseLesson) || 1,
+            point: Number(coursePoint) || 1,
+            date: scheduledDate,
+            dateFormatted: formatFullDateES(scheduledDate),
+            notes: 'Inicio del curso bíblico.',
+            timestamp: nowIso,
+          }
+        ],
+      } : undefined,
       history: [],
     };
 
@@ -98,13 +138,17 @@ export const NewRevisitaModal: React.FC<NewRevisitaModalProps> = ({
         id="modal-nueva-revisita"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-800 to-teal-700 text-white px-5 py-4 flex items-center justify-between shrink-0 shadow-xs">
+        <div className={`text-white px-5 py-4 flex items-center justify-between shrink-0 shadow-xs transition-colors ${
+          isBibleCourseDirect 
+            ? 'bg-gradient-to-r from-indigo-800 to-indigo-700' 
+            : 'bg-gradient-to-r from-emerald-800 to-teal-700'
+        }`}>
           <div>
-            <div className="text-[11px] font-semibold text-emerald-200 uppercase tracking-wider">
-              Registro de persona
+            <div className="text-[11px] font-semibold uppercase tracking-wider opacity-80">
+              {isBibleCourseDirect ? 'Estudiante de la Biblia' : 'Registro de persona'}
             </div>
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <span>＋ NUEVA REVISITA</span>
+              <span>{isBibleCourseDirect ? '＋ NUEVO CURSO BÍBLICO' : '＋ NUEVA REVISITA'}</span>
             </h2>
           </div>
           <button
@@ -124,6 +168,71 @@ export const NewRevisitaModal: React.FC<NewRevisitaModalProps> = ({
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-800 text-xs font-medium">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
               <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {/* Selector de Tipo: Revisita vs Curso Bíblico */}
+          <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200/80">
+            <button
+              type="button"
+              onClick={() => setIsBibleCourseDirect(false)}
+              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                !isBibleCourseDirect
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Revisita</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsBibleCourseDirect(true)}
+              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                isBibleCourseDirect
+                  ? 'bg-indigo-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Curso Bíblico</span>
+            </button>
+          </div>
+
+          {isBibleCourseDirect && (
+            <div className="bg-indigo-50/80 p-3 rounded-xl border border-indigo-200/80 space-y-2">
+              <div className="text-[11px] font-extrabold uppercase text-indigo-950 flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-indigo-700" />
+                <span>Punto de partida del estudio</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                    Lección inicial:
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={200}
+                    value={courseLesson}
+                    onChange={(e) => setCourseLesson(parseInt(e.target.value) || 1)}
+                    className="w-full px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-slate-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                    Punto inicial:
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={coursePoint}
+                    onChange={(e) => setCoursePoint(parseInt(e.target.value) || 1)}
+                    className="w-full px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-slate-800"
+                  />
+                </div>
+              </div>
             </div>
           )}
 
@@ -211,12 +320,12 @@ export const NewRevisitaModal: React.FC<NewRevisitaModalProps> = ({
             />
           </div>
 
-          {/* Selector de fecha (Strict allowed days: Martes, Jueves, Sábado, Domingo) */}
+          {/* Selector de fecha */}
           <div className="pt-2">
             <DatePickerAllowedDays
               value={scheduledDate}
               onChange={setScheduledDate}
-              label="DÍA DE LA PRÓXIMA REVISITA"
+              label={isBibleCourseDirect ? "DÍA DEL PRÓXIMO ESTUDIO BÍBLICO" : "DÍA DE LA PRÓXIMA REVISITA"}
               id="picker-new-revisita"
             />
           </div>
@@ -242,9 +351,13 @@ export const NewRevisitaModal: React.FC<NewRevisitaModalProps> = ({
             <button
               type="submit"
               id="btn-save-revisita"
-              className="w-full py-3.5 px-4 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-bold text-sm tracking-wide rounded-xl shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2"
+              className={`w-full py-3.5 px-4 text-white font-bold text-sm tracking-wide rounded-xl shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 ${
+                isBibleCourseDirect
+                  ? 'bg-indigo-700 hover:bg-indigo-800 active:bg-indigo-900'
+                  : 'bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900'
+              }`}
             >
-              <span>GUARDAR REVISITA</span>
+              <span>{isBibleCourseDirect ? 'GUARDAR CURSO BÍBLICO' : 'GUARDAR REVISITA'}</span>
             </button>
             <button
               type="button"

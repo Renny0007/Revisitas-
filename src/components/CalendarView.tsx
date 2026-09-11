@@ -280,9 +280,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-700 inline-block"></span>
             <span>Cursos Bíblicos</span>
           </div>
-          <div className="flex items-center gap-1.5 text-slate-500">
-            <span>Todos los días habilitados</span>
-          </div>
         </div>
       </div>
 

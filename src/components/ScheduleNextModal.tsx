@@ -183,7 +183,7 @@ export const ScheduleNextModal: React.FC<ScheduleNextModalProps> = ({
             />
           </div>
 
-          {/* Date Picker (Martes, Jueves, Sábado, Domingo) */}
+          {/* Date Picker */}
           <div className="pt-2">
             <DatePickerAllowedDays
               value={scheduledDate}

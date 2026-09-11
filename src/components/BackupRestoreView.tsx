@@ -414,31 +414,21 @@ export const BackupRestoreView: React.FC<BackupRestoreViewProps> = ({
         </div>
       </div>
 
-      {/* Section 4: Rules and Allowed Days Guide */}
+      {/* Section 4: Programación Semanal */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
         <div className="flex items-center gap-2 text-slate-800 font-extrabold text-sm">
           <CalendarCheck2 className="w-4 h-4 text-teal-700" />
-          <span>REGLAS DE DÍAS PERMITIDOS</span>
+          <span>PROGRAMACIÓN SEMANAL</span>
         </div>
         <p className="text-xs text-slate-600 leading-relaxed">
-          Las revisitas se programan exclusivamente en los siguientes 4 días de la semana:
+          Puedes agendar y reprogramar tus revisitas y cursos bíblicos cualquier día de la semana (de lunes a domingo).
         </p>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-bold text-xs text-center">
-            ✓ MARTES
-          </div>
-          <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-bold text-xs text-center">
-            ✓ JUEVES
-          </div>
-          <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-bold text-xs text-center">
-            ✓ SÁBADO
-          </div>
-          <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-bold text-xs text-center">
-            ✓ DOMINGO
-          </div>
-        </div>
-        <div className="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-          🚫 Lunes, Miércoles y Viernes están estrictamente bloqueados en toda la aplicación.
+        <div className="grid grid-cols-7 gap-1.5 text-center">
+          {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day) => (
+            <div key={day} className="p-2 rounded-xl bg-teal-50 border border-teal-200/80 text-teal-950 font-extrabold text-xs">
+              {day}
+            </div>
+          ))}
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { 
   formatDateToISO, 
@@ -29,6 +29,16 @@ export const DatePickerAllowedDays: React.FC<DatePickerAllowedDaysProps> = ({
   const [viewDate, setViewDate] = useState<Date>(() => {
     return value ? parseISODate(value) : new Date();
   });
+
+  // Sincronizar la vista del calendario cuando cambia la fecha seleccionada
+  useEffect(() => {
+    if (value) {
+      const parsed = parseISODate(value);
+      if (!isNaN(parsed.getTime())) {
+        setViewDate(parsed);
+      }
+    }
+  }, [value]);
 
   const todayStr = getTodayString();
   const upcomingList = getUpcomingAllowedDates(7);
@@ -77,24 +87,41 @@ export const DatePickerAllowedDays: React.FC<DatePickerAllowedDaysProps> = ({
   return (
     <div className="space-y-3" id={id}>
       <div className="flex items-center justify-between">
-        <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+        <label htmlFor={`${id}-native-date`} className="text-xs font-bold uppercase tracking-wider text-slate-700">
           {label} {required && <span className="text-rose-500">*</span>}
         </label>
       </div>
 
-      {/* Selected Date Summary Banner */}
+      {/* Selected Date Summary Banner with direct native date input */}
       <div className="p-3 rounded-xl border transition-all bg-gradient-to-r from-emerald-50 to-teal-50/50 border-emerald-200 text-emerald-950 shadow-xs">
-        <div className="flex items-start gap-2.5">
-          <div className="p-2 rounded-lg shrink-0 mt-0.5 bg-emerald-700 text-white shadow-xs">
-            <CalendarIcon className="w-4 h-4" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-start gap-2.5">
+            <div className="p-2 rounded-lg shrink-0 mt-0.5 bg-emerald-700 text-white shadow-xs">
+              <CalendarIcon className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                Fecha seleccionada
+              </div>
+              <div className="text-sm font-bold text-slate-900 capitalize break-words">
+                {value ? formatFullDateES(value) : 'Ninguna fecha seleccionada'}
+              </div>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              Fecha seleccionada
-            </div>
-            <div className="text-sm font-bold text-slate-900 capitalize break-words">
-              {value ? formatFullDateES(value) : 'Ninguna fecha seleccionada'}
-            </div>
+
+          <div className="shrink-0 flex items-center gap-1.5">
+            <input
+              type="date"
+              id={`${id}-native-date`}
+              value={value || ''}
+              onChange={(e) => {
+                if (e.target.value) {
+                  onChange(e.target.value);
+                }
+              }}
+              className="px-2.5 py-1.5 bg-white border border-emerald-300 rounded-lg text-xs font-bold text-slate-900 shadow-2xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+              title="Seleccionar fecha directamente"
+            />
           </div>
         </div>
       </div>

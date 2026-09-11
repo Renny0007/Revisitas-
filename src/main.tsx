@@ -13,6 +13,7 @@ if ('serviceWorker' in navigator) {
         .register('/sw.js', { scope: '/' })
         .then((registration) => {
           console.log('PWA ServiceWorker registered in production:', registration.scope);
+          registration.update();
         })
         .catch((error) => {
           console.warn('PWA ServiceWorker registration failed:', error);
@@ -25,6 +26,13 @@ if ('serviceWorker' in navigator) {
         registration.unregister();
       }
     });
+    if ('caches' in window) {
+      caches.keys().then((names) => {
+        for (const name of names) {
+          caches.delete(name);
+        }
+      });
+    }
   }
 }
 

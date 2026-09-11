@@ -19,8 +19,6 @@ import {
   formatFullDateES, 
   getDayName, 
   getTodayString, 
-  isAllowedDateString, 
-  isAllowedDayOfWeek, 
   MONTH_NAMES_ES, 
   DAY_NAMES_ES 
 } from '../utils/dateUtils';
@@ -151,7 +149,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const selectedCourses = coursesByDate[selectedDayISO] || [];
   const totalSelectedEvents = selectedRevisitas.length + selectedCourses.length;
 
-  const isSelectedDateAllowed = isAllowedDateString(selectedDayISO);
   const selectedDayFormatted = formatFullDateES(selectedDayISO);
 
   return (

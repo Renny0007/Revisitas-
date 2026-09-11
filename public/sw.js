@@ -1,5 +1,5 @@
 // Service Worker for MIS REVISITAS PWA - Offline Caching and Asset Management
-const CACHE_NAME = 'mis-revisitas-v3';
+const CACHE_NAME = 'mis-revisitas-v6-alldays';
 
 const STATIC_ASSETS = [
   '/',
@@ -40,33 +40,34 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (!event.request.url.startsWith('http')) return;
 
+  // Network-First strategy: always fetch fresh assets from the server first
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      // Return cached response if available, otherwise fetch from network
-      return (
-        cachedResponse ||
-        fetch(event.request)
-          .then((networkResponse) => {
-            // Cache successful responses for assets/scripts
-            if (
-              networkResponse &&
-              networkResponse.status === 200 &&
-              networkResponse.type === 'basic'
-            ) {
-              const responseToCache = networkResponse.clone();
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-            }
-            return networkResponse;
-          })
-          .catch(() => {
-            // Offline fallback for navigation
-            if (event.request.mode === 'navigate') {
-              return caches.match('/index.html');
-            }
-          })
-      );
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        // If response is valid, update the cache in the background
+        if (
+          networkResponse &&
+          networkResponse.status === 200 &&
+          networkResponse.type === 'basic'
+        ) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        // Fallback to cache when offline
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          if (event.request.mode === 'navigate') {
+            return caches.match('/index.html') || caches.match('/');
+          }
+          return new Response('Offline', { status: 503, statusText: 'Offline' });
+        });
+      })
   );
 });

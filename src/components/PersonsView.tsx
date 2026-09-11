@@ -64,6 +64,7 @@ export const PersonsView: React.FC<PersonsViewProps> = ({
         if (filterType === 'ATRASADAS') return status === 'ATRASADA';
         if (filterType === 'VISITADAS') return status === 'ENCONTRADA';
         if (filterType === 'NO_ENCONTRADAS') return status === 'NO_ENCONTRADA';
+        if (filterType === 'DESCARTADAS') return status === 'DESCARTADA';
 
         return true;
       })
@@ -125,7 +126,7 @@ export const PersonsView: React.FC<PersonsViewProps> = ({
         <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
           {/* Filter Pills */}
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
-            {(['TODAS', 'HOY', 'PROXIMAS', 'ATRASADAS', 'VISITADAS', 'CURSOS'] as (FilterType | 'CURSOS')[]).map((f) => (
+            {(['TODAS', 'HOY', 'PROXIMAS', 'ATRASADAS', 'VISITADAS', 'DESCARTADAS', 'CURSOS'] as (FilterType | 'CURSOS')[]).map((f) => (
               <button
                 key={f}
                 type="button"
@@ -142,6 +143,7 @@ export const PersonsView: React.FC<PersonsViewProps> = ({
                 {f === 'PROXIMAS' && '📅 Próximas'}
                 {f === 'ATRASADAS' && '⚠️ Atrasadas'}
                 {f === 'VISITADAS' && '🟢 Visitadas'}
+                {f === 'DESCARTADAS' && '⚪ Descartadas'}
                 {f === 'CURSOS' && `📖 Cursos (${coursesCount})`}
               </button>
             ))}

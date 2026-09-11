@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, History, Calendar, CalendarX, CheckCircle2, XCircle, Clock, MessageSquare, BookOpen, FileText, Trash2, ChevronRight } from 'lucide-react';
+import { X, History, Calendar, CalendarX, CheckCircle2, XCircle, Clock, MessageSquare, BookOpen, FileText, Trash2, ChevronRight, Ban } from 'lucide-react';
 import { Person, VisitHistoryRecord } from '../types';
 
 interface HistoryModalProps {
@@ -75,6 +75,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                 const isFound = record.result === 'ENCONTRADA';
                 const isNotFound = record.result === 'NO_ENCONTRADA';
                 const isCouldNotGo = record.result === 'NO_PUDE_IR';
+                const isDiscarded = record.result === 'DESCARTADA';
 
                 return (
                   <div 
@@ -84,7 +85,9 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                   >
                     {/* Timeline Node Dot */}
                     <div className={`absolute left-1.5 top-3.5 w-4.5 h-4.5 -translate-x-1/2 rounded-full border-2 border-white flex items-center justify-center shadow-xs ${
-                      isFound 
+                      isDiscarded
+                        ? 'bg-slate-800 text-white'
+                        : isFound 
                         ? 'bg-emerald-600 text-white' 
                         : isNotFound 
                         ? 'bg-rose-600 text-white' 
@@ -92,7 +95,9 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                         ? 'bg-slate-700 text-white'
                         : 'bg-amber-500 text-white'
                     }`}>
-                      {isFound ? (
+                      {isDiscarded ? (
+                        <Ban className="w-2.5 h-2.5" />
+                      ) : isFound ? (
                         <CheckCircle2 className="w-3 h-3" />
                       ) : isNotFound ? (
                         <XCircle className="w-3 h-3" />
@@ -105,7 +110,9 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
 
                     {/* Timeline Card */}
                     <div className={`rounded-2xl border p-4 transition-all shadow-2xs ${
-                      isFound 
+                      isDiscarded
+                        ? 'bg-slate-100/80 border-slate-300'
+                        : isFound 
                         ? 'bg-emerald-50/50 border-emerald-200/80' 
                         : isNotFound 
                         ? 'bg-rose-50/40 border-rose-200/80' 
@@ -120,7 +127,9 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                             Registro {record.attemptNumber || index + 1}
                           </span>
                           <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                            isFound 
+                            isDiscarded
+                              ? 'bg-slate-200 text-slate-800'
+                              : isFound 
                               ? 'bg-emerald-100 text-emerald-900' 
                               : isNotFound 
                               ? 'bg-rose-100 text-rose-900' 
@@ -128,10 +137,11 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                               ? 'bg-slate-200 text-slate-900'
                               : 'bg-amber-100 text-amber-900'
                           }`}>
+                            {isDiscarded && '⚪ Revisita descartada'}
                             {isFound && '🟢 Fui y la encontré'}
                             {isNotFound && '🔴 Fui y no estaba'}
                             {isCouldNotGo && '⚪ No pude ir'}
-                            {!isFound && !isNotFound && !isCouldNotGo && '⚪ Sin registrar'}
+                            {!isDiscarded && !isFound && !isNotFound && !isCouldNotGo && '⚪ Sin registrar'}
                           </span>
                         </div>
 
@@ -165,24 +175,26 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
 
                         <div>
                           <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                            {isFound ? (
+                            {isDiscarded ? (
+                              <Ban className="w-3 h-3 text-slate-600" />
+                            ) : isFound ? (
                               <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                             ) : isNotFound ? (
                               <XCircle className="w-3 h-3 text-rose-600" />
                             ) : (
                               <CalendarX className="w-3 h-3 text-slate-600" />
                             )}
-                            <span>{isCouldNotGo ? 'Fecha registrada:' : 'Fui el:'}</span>
+                            <span>{isDiscarded ? 'Descartada el:' : isCouldNotGo ? 'Fecha registrada:' : 'Fui el:'}</span>
                           </div>
                           <div className={`font-semibold capitalize mt-0.5 ${
-                            isFound ? 'text-emerald-900' : isNotFound ? 'text-rose-900' : 'text-slate-900'
+                            isDiscarded ? 'text-slate-900' : isFound ? 'text-emerald-900' : isNotFound ? 'text-rose-900' : 'text-slate-900'
                           }`}>
                             {record.actualVisitDateFormatted || record.actualVisitDate || 'No especificada'}
                           </div>
                         </div>
                       </div>
 
-                      {/* Topics */}
+                      {/* Topics & Motive */}
                       <div className="space-y-2.5">
                         {record.topicSpoken && (
                           <div className="bg-white p-3 rounded-xl border border-emerald-200/90 shadow-2xs">
@@ -207,10 +219,17 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                         )}
 
                         {record.notes && (
-                          <div className="flex items-start gap-2 pt-1 border-t border-slate-200/50 text-xs px-1">
-                            <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                            <div className="text-slate-600 italic">
-                              "{record.notes}"
+                          <div className={`p-2.5 rounded-xl border text-xs ${
+                            isDiscarded 
+                              ? 'bg-white border-slate-300 text-slate-900' 
+                              : 'bg-white/80 border-slate-200 text-slate-700'
+                          }`}>
+                            <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px] text-slate-600 mb-1">
+                              <FileText className="w-3.5 h-3.5 text-slate-500" />
+                              <span>{isDiscarded ? 'Motivo registrado:' : 'Notas adicionales:'}</span>
+                            </div>
+                            <div className="font-medium whitespace-pre-wrap text-slate-900">
+                              {record.notes}
                             </div>
                           </div>
                         )}

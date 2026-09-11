@@ -129,6 +129,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         }
       }
     } else {
+      if (person.currentVisit?.result === 'DESCARTADA') {
+        continue;
+      }
       const sDate = person.currentVisit?.scheduledDate;
       if (sDate) {
         if (!revisitasByDate[sDate]) revisitasByDate[sDate] = [];

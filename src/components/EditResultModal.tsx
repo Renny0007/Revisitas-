@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, CheckCircle2, XCircle, Clock, Calendar, CalendarX, FileText } from 'lucide-react';
+import { X, CheckCircle2, XCircle, Clock, Calendar, CalendarX, FileText, Ban } from 'lucide-react';
 import { Person, VisitResult } from '../types';
 import { formatFullDateES, formatShortDateES, getTodayString } from '../utils/dateUtils';
 
@@ -169,6 +169,32 @@ export const EditResultModal: React.FC<EditResultModalProps> = ({
               <div className="flex-1 text-xs">
                 <div className="font-bold text-slate-900">No pude ir</div>
                 <p className="text-slate-500 text-[11px] mt-0.5">Registrar la fecha en que no fue posible realizar la revisita.</p>
+              </div>
+            </label>
+
+            {/* Option 4: DESCARTADA */}
+            <label 
+              className={`flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                selectedResult === 'DESCARTADA'
+                  ? 'border-slate-800 bg-slate-100 text-slate-950 shadow-xs'
+                  : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-800'
+              }`}
+            >
+              <input
+                type="radio"
+                name="visit-result-option"
+                checked={selectedResult === 'DESCARTADA'}
+                onChange={() => setSelectedResult('DESCARTADA')}
+                className="sr-only"
+              />
+              <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
+                selectedResult === 'DESCARTADA' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'
+              }`}>
+                <Ban className="w-4 h-4" />
+              </div>
+              <div className="flex-1 text-xs">
+                <div className="font-bold text-slate-900">⚪ Descartar revisita</div>
+                <p className="text-slate-500 text-[11px] mt-0.5">Finalizar esta revisita y quitarla de las programadas pendientes.</p>
               </div>
             </label>
 

@@ -280,15 +280,23 @@ export default function App() {
         if (status === 'ENCONTRADA' || status === 'NO_ENCONTRADA' || status === 'NO_PUDE_IR') other.push(p);
         return;
       }
+      if (activeFilter === 'DESCARTADAS') {
+        if (status === 'DESCARTADA') other.push(p);
+        return;
+      }
 
       // Default TODAS: Sort into status buckets
+      // Notice: Discarded revisitas are removed from pending and scheduled lists
       if (status === 'HOY') {
         today.push(p);
       } else if (status === 'ATRASADA') {
         overdue.push(p);
       } else if (status === 'PROXIMA') {
         upcoming.push(p);
-      } else {
+      } else if (status === 'ENCONTRADA' || status === 'NO_ENCONTRADA' || status === 'NO_PUDE_IR') {
+        other.push(p);
+      } else if (status === 'DESCARTADA' && query) {
+        // If the user explicitly searches for a discarded person, show them in other
         other.push(p);
       }
     });

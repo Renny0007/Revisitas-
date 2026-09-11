@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   MapPin, 
   MessageSquare, 
@@ -15,12 +15,14 @@ import {
   ExternalLink,
   Phone,
   ChevronRight,
-  RotateCcw
+  RotateCcw,
+  Ban
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Person, RevisitaStatus, VisitHistoryRecord } from '../types';
 import { formatFullDateES, formatShortDateES, getTodayString } from '../utils/dateUtils';
 import { generateUniqueId, getPersonStatus } from '../utils/storage';
+import { DiscardRevisitaModal } from './DiscardRevisitaModal';
 
 interface RevisitaCardProps {
   person: Person;
@@ -53,6 +55,7 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
   onPassToCourse,
   onCourseDetail,
 }) => {
+  const [isDiscardModalOpen, setIsDiscardModalOpen] = useState(false);
   const status = getPersonStatus(person);
   const currentVisit = person.currentVisit;
   const historyCount = person.history?.length || 0;
@@ -81,6 +84,43 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
   const handleTriggerPassToCourse = () => {
     if (onOpenPassToCourse) onOpenPassToCourse(person);
     else if (onPassToCourse) onPassToCourse(person);
+  };
+
+  const handleConfirmDiscard = (personToDiscard: Person, discardDate: string, reason?: string) => {
+    if (!onUpdatePerson) return;
+    const todayFormatted = formatShortDateES(discardDate);
+    const attemptNumber = (personToDiscard.history?.length || 0) + 1;
+    const reasonText = reason ? `Revisita descartada. Motivo: ${reason}` : 'Revisita descartada.';
+
+    const newHistoryRecord: VisitHistoryRecord = {
+      id: generateUniqueId(),
+      attemptNumber,
+      scheduledDate: currentVisit.scheduledDate,
+      scheduledDateFormatted: currentVisit.scheduledDateFormatted,
+      actualVisitDate: discardDate,
+      actualVisitDateFormatted: todayFormatted,
+      result: 'DESCARTADA',
+      topicSpoken: currentVisit.topicSpoken,
+      topicPending: currentVisit.topicPending,
+      notes: reasonText,
+      timestamp: new Date().toISOString(),
+    };
+
+    const updated: Person = {
+      ...personToDiscard,
+      updatedAt: new Date().toISOString(),
+      currentVisit: {
+        ...currentVisit,
+        result: 'DESCARTADA',
+        actualVisitDate: discardDate,
+        actualVisitDateFormatted: todayFormatted,
+        resultNotes: reason || undefined,
+        resultRegisteredAt: new Date().toISOString(),
+      },
+      history: [...(personToDiscard.history || []), newHistoryRecord],
+    };
+
+    onUpdatePerson(updated);
   };
 
   // Handle Mark "FUI Y LA ENCONTRÉ"
@@ -258,6 +298,13 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
             <span>⚪ NO PUDE IR</span>
           </span>
         );
+      case 'DESCARTADA':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs">
+            <Ban className="w-3.5 h-3.5 text-slate-500" />
+            <span>⚪ DESCARTADA</span>
+          </span>
+        );
       case 'PROXIMA':
       default:
         return (
@@ -272,6 +319,7 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
   const isFound = currentVisit.result === 'ENCONTRADA';
   const isNotFound = currentVisit.result === 'NO_ENCONTRADA';
   const isCouldNotGo = currentVisit.result === 'NO_PUDE_IR';
+  const isDiscarded = currentVisit.result === 'DESCARTADA';
   const isUnregistered = currentVisit.result === 'SIN_REGISTRAR';
 
   return (
@@ -471,6 +519,43 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
             </button>
           </div>
 
+          {/* Opción 4: DESCARTAR REVISITA (Debajo de No pude ir) */}
+          <div className="mt-2">
+            <button
+              type="button"
+              id={`btn-descartar-revisita-${person.id}`}
+              onClick={() => setIsDiscardModalOpen(true)}
+              className={`w-full p-2.5 rounded-xl border text-left flex items-start gap-2.5 transition-all active:scale-[0.98] ${
+                isDiscarded
+                  ? 'bg-slate-100 text-slate-900 border-slate-400 shadow-xs font-semibold'
+                  : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              <div className={`w-4 h-4 rounded-md mt-0.5 border flex items-center justify-center shrink-0 ${
+                isDiscarded ? 'bg-slate-800 border-slate-800 text-white' : 'border-slate-300 bg-white'
+              }`}>
+                {isDiscarded ? <Ban className="w-3 h-3 text-white" /> : <span className="w-2 h-2 rounded-full border border-slate-400" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-1">
+                  <div className={`text-xs font-bold leading-tight ${isDiscarded ? 'text-slate-900' : 'text-slate-700'}`}>
+                    ⚪ DESCARTAR REVISITA
+                  </div>
+                  {isDiscarded && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-200 text-slate-800">
+                      Finalizada
+                    </span>
+                  )}
+                </div>
+                <div className={`text-[10px] mt-0.5 ${isDiscarded ? 'text-slate-700 font-medium' : 'text-slate-500'}`}>
+                  {isDiscarded && currentVisit.actualVisitDateFormatted 
+                    ? `Descartada el: ${currentVisit.actualVisitDateFormatted}${currentVisit.resultNotes ? ` • Motivo: ${currentVisit.resultNotes}` : ''}`
+                    : 'Finalizar revisita y guardar motivo en su historial'}
+                </div>
+              </div>
+            </button>
+          </div>
+
           {/* Botones de acción posterior al marcar */}
           {isFound && (
             <div className="mt-2.5 space-y-2">
@@ -511,6 +596,44 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
                 <Calendar className="w-4 h-4 text-slate-300" />
                 <span>＋ REPROGRAMAR PARA OTRO DÍA</span>
               </button>
+            </div>
+          )}
+
+          {isDiscarded && (
+            <div className="mt-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+              <div className="flex items-start gap-2 text-xs text-slate-700">
+                <Ban className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-slate-900">
+                    Revisita descartada y finalizada
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    {currentVisit.actualVisitDateFormatted ? `Fecha: ${currentVisit.actualVisitDateFormatted}` : ''}
+                    {currentVisit.resultNotes ? ` • Motivo: ${currentVisit.resultNotes}` : ''}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 pt-1 border-t border-slate-200/80">
+                <button
+                  type="button"
+                  id={`btn-ver-historial-descartada-${person.id}`}
+                  onClick={handleTriggerHistory}
+                  className="flex-1 py-2 px-3 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 shadow-2xs text-center flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <History className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Ver Historial Guardado</span>
+                </button>
+                <button
+                  type="button"
+                  id={`btn-reactivar-revisita-${person.id}`}
+                  onClick={() => handleTriggerScheduleNext('NEW_ATTEMPT')}
+                  className="py-2 px-3 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow-2xs text-center flex items-center justify-center gap-1.5 transition-colors"
+                  title="Reactivar y programar nueva fecha"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-slate-200" />
+                  <span>Reactivar</span>
+                </button>
+              </div>
             </div>
           )}
 
@@ -586,6 +709,14 @@ export const RevisitaCard: React.FC<RevisitaCardProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Modal para descartar revisita con confirmación y motivo */}
+      <DiscardRevisitaModal
+        isOpen={isDiscardModalOpen}
+        onClose={() => setIsDiscardModalOpen(false)}
+        person={person}
+        onConfirmDiscard={handleConfirmDiscard}
+      />
     </div>
   );
 };

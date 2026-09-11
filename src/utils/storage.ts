@@ -164,6 +164,9 @@ export function getPersonStatus(person: Person): RevisitaStatus {
   if (currentVisit.result === 'NO_PUDE_IR') {
     return 'NO_PUDE_IR';
   }
+  if (currentVisit.result === 'DESCARTADA') {
+    return 'DESCARTADA';
+  }
 
   // Result is SIN_REGISTRAR / PENDIENTE
   if (isRevisitaDueToday(person)) {
@@ -451,6 +454,7 @@ export function calculateStatistics(persons: Person[]): Statistics {
   let foundCount = 0;
   let notFoundCount = 0;
   let couldNotGoCount = 0;
+  let discardedCount = 0;
 
   // Cursos Bíblicos
   let totalCourses = 0;
@@ -502,6 +506,9 @@ export function calculateStatistics(persons: Person[]): Statistics {
         case 'NO_PUDE_IR':
           couldNotGoCount++;
           break;
+        case 'DESCARTADA':
+          discardedCount++;
+          break;
       }
     }
   }
@@ -518,6 +525,7 @@ export function calculateStatistics(persons: Person[]): Statistics {
     found: foundCount,
     notFound: notFoundCount,
     couldNotGo: couldNotGoCount,
+    discarded: discardedCount,
     totalCourses,
     activeCourses,
     pausedCourses,

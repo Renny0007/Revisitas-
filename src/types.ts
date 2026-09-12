@@ -45,13 +45,23 @@ export interface CurrentVisitInfo {
   recurringDayName?: string;           // Día programado habitual (ej: "Lunes", "Martes", etc.)
 }
 
+export type StudySessionResult = 
+  | 'ESTUDIO_DADO' 
+  | 'ESTUDIANTE_NO_ESTABA' 
+  | 'NO_PUDE_IR' 
+  | 'ESTUDIANTE_NO_PUDO';
+
 export interface CourseHistoryRecord {
   id: string;
+  result?: StudySessionResult;         // 'ESTUDIO_DADO' | 'ESTUDIANTE_NO_ESTABA' | 'NO_PUDE_IR' | 'ESTUDIANTE_NO_PUDO'
   lesson: number;                      // Número de lección (ej: 2, 5, etc.)
   point: number;                       // Número de punto (ej: 4, 1, etc.)
   date: string;                        // YYYY-MM-DD
   dateFormatted: string;               // ej: "20 de agosto de 2026"
   notes?: string;                      // Notas u observaciones de la lección
+  reason?: string;                     // Motivo opcional cuando no se realizó
+  rescheduledDate?: string;            // YYYY-MM-DD si se reprogramó
+  rescheduledDateFormatted?: string;   // ej: "27 de agosto de 2026"
   timestamp: string;                   // ISO string
 }
 

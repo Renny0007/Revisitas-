@@ -376,7 +376,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                               className="py-1.5 px-2.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 font-bold text-xs rounded-lg flex items-center gap-1"
                             >
                               <Edit3 className="w-3.5 h-3.5 text-indigo-600" />
-                              <span>Progreso</span>
+                              <span>Registrar</span>
                             </button>
                           )}
                         </div>

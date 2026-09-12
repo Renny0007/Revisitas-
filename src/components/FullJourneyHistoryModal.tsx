@@ -13,7 +13,9 @@ import {
   Sparkles,
   ArrowRight,
   TrendingUp,
-  Trash2
+  Trash2,
+  UserX,
+  PhoneOff
 } from 'lucide-react';
 import { Person } from '../types';
 
@@ -152,31 +154,118 @@ export const FullJourneyHistoryModal: React.FC<FullJourneyHistoryModalProps> = (
                 </div>
               ) : (
                 <div className="space-y-3 relative before:absolute before:inset-0 before:left-3 before:w-0.5 before:bg-indigo-200">
-                  {courseHistory.map((rec, idx) => (
-                    <div key={rec.id || idx} className="relative pl-7">
-                      <div className="absolute left-1 top-3 w-4 h-4 -translate-x-1/2 rounded-full border-2 border-white bg-indigo-700 text-white flex items-center justify-center text-[9px] font-extrabold shadow-xs">
-                        {idx + 1}
-                      </div>
+                  {courseHistory.map((rec, idx) => {
+                    const result = rec.result || 'ESTUDIO_DADO';
+                    const isGiven = result === 'ESTUDIO_DADO';
+                    const isStudentAbsent = result === 'ESTUDIANTE_NO_ESTABA';
+                    const isCouldNotGo = result === 'NO_PUDE_IR';
+                    const isStudentCouldNot = result === 'ESTUDIANTE_NO_PUDO';
 
-                      <div className="bg-white border border-indigo-200 rounded-xl p-3.5 shadow-2xs space-y-2">
-                        <div className="flex items-center justify-between gap-2 border-b border-indigo-100 pb-2">
-                          <div className="text-xs font-extrabold text-indigo-950 flex items-center gap-1.5">
-                            <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-                            <span>LECCIÓN {rec.lesson} — PUNTO {rec.point}</span>
-                          </div>
-                          <div className="text-[11px] font-semibold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
-                            📅 {rec.dateFormatted || rec.date}
-                          </div>
+                    return (
+                      <div key={rec.id || idx} className="relative pl-7">
+                        <div className={`absolute left-1 top-3 w-4 h-4 -translate-x-1/2 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-extrabold shadow-xs ${
+                          isGiven 
+                            ? 'bg-emerald-600 text-white' 
+                            : isStudentAbsent 
+                            ? 'bg-slate-700 text-white' 
+                            : isCouldNotGo 
+                            ? 'bg-blue-600 text-white' 
+                            : 'bg-amber-600 text-white'
+                        }`}>
+                          {idx + 1}
                         </div>
 
-                        {rec.notes && (
-                          <div className="text-xs text-slate-700 italic bg-slate-50 p-2 rounded-lg border border-slate-200">
-                            "{rec.notes}"
+                        <div className={`border rounded-xl p-3.5 shadow-2xs space-y-2 ${
+                          isGiven
+                            ? 'bg-white border-indigo-200'
+                            : isStudentAbsent
+                            ? 'bg-slate-50/90 border-slate-300'
+                            : isCouldNotGo
+                            ? 'bg-blue-50/70 border-blue-200'
+                            : 'bg-amber-50/70 border-amber-200'
+                        }`}>
+                          <div className="flex items-center justify-between gap-2 border-b border-slate-200/70 pb-2 flex-wrap">
+                            <span className={`text-xs font-black px-2 py-0.5 rounded-md border flex items-center gap-1 ${
+                              isGiven
+                                ? 'bg-emerald-100 text-emerald-950 border-emerald-300'
+                                : isStudentAbsent
+                                ? 'bg-slate-200 text-slate-900 border-slate-400'
+                                : isCouldNotGo
+                                ? 'bg-blue-100 text-blue-950 border-blue-300'
+                                : 'bg-amber-100 text-amber-950 border-amber-300'
+                            }`}>
+                              {isGiven && (
+                                <>
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                                  <span>✅ ESTUDIO DADO</span>
+                                </>
+                              )}
+                              {isStudentAbsent && (
+                                <>
+                                  <UserX className="w-3.5 h-3.5 text-slate-700" />
+                                  <span>⚪ ESTUDIANTE NO ESTABA</span>
+                                </>
+                              )}
+                              {isCouldNotGo && (
+                                <>
+                                  <CalendarX className="w-3.5 h-3.5 text-blue-700" />
+                                  <span>🔵 NO PUDE IR</span>
+                                </>
+                              )}
+                              {isStudentCouldNot && (
+                                <>
+                                  <PhoneOff className="w-3.5 h-3.5 text-amber-700" />
+                                  <span>🟠 ESTUDIANTE NO PUDO</span>
+                                </>
+                              )}
+                            </span>
+
+                            <span className="text-[11px] font-semibold text-slate-600 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                              📅 {rec.dateFormatted || rec.date}
+                            </span>
                           </div>
-                        )}
+
+                          <div className="text-xs text-slate-800 flex items-center justify-between gap-2">
+                            <div className="font-extrabold text-indigo-950 flex items-center gap-1.5">
+                              <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>LECCIÓN {rec.lesson} — PUNTO {rec.point}</span>
+                              {!isGiven && <span className="font-normal text-slate-500 text-[11px]">(sin avance)</span>}
+                            </div>
+                            {rec.rescheduledDateFormatted && (
+                              <span className="text-[11px] text-indigo-800 font-semibold">
+                                🗓️ Reprogramado: <strong>{rec.rescheduledDateFormatted}</strong>
+                              </span>
+                            )}
+                          </div>
+
+                          {!isGiven && (
+                            <div className={`text-xs px-2.5 py-1.5 rounded-lg font-medium border ${
+                              isStudentAbsent 
+                                ? 'bg-slate-100 border-slate-200 text-slate-700' 
+                                : isCouldNotGo 
+                                ? 'bg-blue-100/60 border-blue-200 text-blue-900' 
+                                : 'bg-amber-100/60 border-amber-200 text-amber-900'
+                            }`}>
+                              {isStudentAbsent && 'Fui al lugar pero el estudiante no se encontraba.'}
+                              {isCouldNotGo && 'El estudio no se realizó porque el publicador no pudo asistir.'}
+                              {isStudentCouldNot && 'El estudiante avisó o no pudo recibir el estudio.'}
+                              {rec.reason && (
+                                <div className="mt-1 font-bold">
+                                  Motivo: <span className="font-normal italic">"{rec.reason}"</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {rec.notes && (
+                            <div className="text-xs text-slate-700 italic bg-white/80 p-2 rounded-lg border border-slate-200">
+                              "{rec.notes}"
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

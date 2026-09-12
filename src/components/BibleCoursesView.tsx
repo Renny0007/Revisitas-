@@ -366,10 +366,10 @@ export const BibleCoursesView: React.FC<BibleCoursesViewProps> = ({
                     type="button"
                     onClick={() => onOpenUpdateProgress(person)}
                     className="py-2.5 px-3 bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 border border-slate-200 font-bold text-xs rounded-xl shadow-2xs transition-colors flex items-center gap-1"
-                    title="Actualizar lección o punto"
+                    title="Registrar resultado o avance del estudio"
                   >
                     <Edit3 className="w-4 h-4 text-indigo-600" />
-                    <span>Progreso</span>
+                    <span>Registrar</span>
                   </button>
                 </div>
               </div>

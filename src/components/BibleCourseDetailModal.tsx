@@ -18,7 +18,10 @@ import {
   PauseCircle,
   PlayCircle,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  UserX,
+  CalendarX,
+  PhoneOff
 } from 'lucide-react';
 import { CourseStatus, Person } from '../types';
 import { 
@@ -536,7 +539,7 @@ export const BibleCourseDetailModal: React.FC<BibleCourseDetailModalProps> = ({
               className="py-3 px-4 bg-indigo-700 hover:bg-indigo-800 active:bg-indigo-900 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all active:scale-[0.99] flex items-center justify-center gap-2"
             >
               <Edit3 className="w-4 h-4" />
-              <span>✏️ ACTUALIZAR PROGRESO</span>
+              <span>✏️ REGISTRAR RESULTADO / PROGRESO</span>
             </button>
 
             <button
@@ -618,28 +621,109 @@ export const BibleCourseDetailModal: React.FC<BibleCourseDetailModalProps> = ({
                 No hay sesiones de estudio registradas aún. Pulsa <strong>"ACTUALIZAR PROGRESO"</strong> para registrar la primera sesión.
               </div>
             ) : (
-              <div className="space-y-2">
-                {history.slice().reverse().map((rec, index) => (
-                  <div 
-                    key={rec.id || index}
-                    className="bg-white p-3 rounded-xl border border-indigo-100 shadow-2xs space-y-1.5"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-extrabold text-indigo-950 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
-                        📖 Lección {rec.lesson} — Punto {rec.point}
-                      </span>
-                      <span className="text-[11px] font-semibold text-slate-600">
-                        📅 {rec.dateFormatted || rec.date}
-                      </span>
-                    </div>
+              <div className="space-y-2.5">
+                {history.slice().reverse().map((rec, index) => {
+                  const result = rec.result || 'ESTUDIO_DADO';
+                  const isGiven = result === 'ESTUDIO_DADO';
+                  const isStudentAbsent = result === 'ESTUDIANTE_NO_ESTABA';
+                  const isCouldNotGo = result === 'NO_PUDE_IR';
+                  const isStudentCouldNot = result === 'ESTUDIANTE_NO_PUDO';
 
-                    {rec.notes && (
-                      <p className="text-xs text-slate-700 italic pl-1 border-l-2 border-indigo-400">
-                        "{rec.notes}"
-                      </p>
-                    )}
-                  </div>
-                ))}
+                  return (
+                    <div 
+                      key={rec.id || index}
+                      className={`p-3.5 rounded-xl border shadow-2xs space-y-2 ${
+                        isGiven
+                          ? 'bg-white border-indigo-100'
+                          : isStudentAbsent
+                          ? 'bg-slate-50/90 border-slate-300'
+                          : isCouldNotGo
+                          ? 'bg-blue-50/70 border-blue-200'
+                          : 'bg-amber-50/70 border-amber-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className={`text-xs font-black px-2.5 py-0.5 rounded-md border flex items-center gap-1.5 ${
+                          isGiven
+                            ? 'bg-emerald-100 text-emerald-950 border-emerald-300'
+                            : isStudentAbsent
+                            ? 'bg-slate-200 text-slate-900 border-slate-400'
+                            : isCouldNotGo
+                            ? 'bg-blue-100 text-blue-950 border-blue-300'
+                            : 'bg-amber-100 text-amber-950 border-amber-300'
+                        }`}>
+                          {isGiven && (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                              <span>✅ ESTUDIO DADO</span>
+                            </>
+                          )}
+                          {isStudentAbsent && (
+                            <>
+                              <UserX className="w-3.5 h-3.5 text-slate-700" />
+                              <span>⚪ ESTUDIANTE NO ESTABA</span>
+                            </>
+                          )}
+                          {isCouldNotGo && (
+                            <>
+                              <CalendarX className="w-3.5 h-3.5 text-blue-700" />
+                              <span>🔵 NO PUDE IR</span>
+                            </>
+                          )}
+                          {isStudentCouldNot && (
+                            <>
+                              <PhoneOff className="w-3.5 h-3.5 text-amber-700" />
+                              <span>🟠 ESTUDIANTE NO PUDO</span>
+                            </>
+                          )}
+                        </span>
+
+                        <span className="text-[11px] font-bold text-slate-600">
+                          📅 {rec.dateFormatted || rec.date}
+                        </span>
+                      </div>
+
+                      {/* Lesson and Point context */}
+                      <div className="text-xs text-slate-800 flex items-center justify-between gap-2">
+                        <span className="font-extrabold text-indigo-950 bg-indigo-50/80 px-2 py-0.5 rounded-md border border-indigo-200">
+                          📖 Lección {rec.lesson} — Punto {rec.point}
+                          {!isGiven && <span className="font-normal text-slate-500 ml-1">(sin avance)</span>}
+                        </span>
+                        {rec.rescheduledDateFormatted && (
+                          <span className="text-[11px] text-indigo-800 font-semibold">
+                            🗓️ Reprogramado: <strong>{rec.rescheduledDateFormatted}</strong>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Who/What caused it explanation */}
+                      {!isGiven && (
+                        <div className={`text-xs px-2.5 py-1.5 rounded-lg font-medium border ${
+                          isStudentAbsent 
+                            ? 'bg-slate-100 border-slate-200 text-slate-700' 
+                            : isCouldNotGo 
+                            ? 'bg-blue-100/60 border-blue-200 text-blue-900' 
+                            : 'bg-amber-100/60 border-amber-200 text-amber-900'
+                        }`}>
+                          {isStudentAbsent && 'Fui al lugar pero el estudiante no se encontraba.'}
+                          {isCouldNotGo && 'El estudio no se realizó porque el publicador no pudo asistir.'}
+                          {isStudentCouldNot && 'El estudiante avisó o no pudo recibir el estudio.'}
+                          {rec.reason && (
+                            <div className="mt-1 font-bold">
+                              Motivo: <span className="font-normal italic">"{rec.reason}"</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {rec.notes && (
+                        <p className="text-xs text-slate-700 italic pl-2 border-l-2 border-indigo-400 bg-white/70 p-1.5 rounded-r-lg">
+                          "{rec.notes}"
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

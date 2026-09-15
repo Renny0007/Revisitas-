@@ -32,6 +32,13 @@ import {
 } from '../utils/dateUtils';
 import { generateUniqueId } from '../utils/storage';
 import { DatePickerAllowedDays } from './DatePickerAllowedDays';
+import { 
+  getCourseProgressDetails, 
+  formatParagraphsText, 
+  calculateNextStudy, 
+  PARAGRAPHS_LIST, 
+  MAX_PARAGRAPHS_PER_LESSON 
+} from '../utils/courseProgress';
 
 interface UpdateCourseProgressModalProps {
   isOpen: boolean;
@@ -69,12 +76,29 @@ export const UpdateCourseProgressModal: React.FC<UpdateCourseProgressModalProps>
   const currentCourse = person.bibleCourse;
   const todayStr = getTodayString();
 
+  // Progress calculations from previous sessions
+  const progressInfo = getCourseProgressDetails(currentCourse);
+
   // Selected session result: 4 options
   const [sessionResult, setSessionResult] = useState<StudySessionResult>('ESTUDIO_DADO');
 
-  // Lesson and point (for ESTUDIO_DADO)
-  const [lesson, setLesson] = useState<number>(currentCourse.currentLesson || 1);
-  const [point, setPoint] = useState<number>(currentCourse.currentPoint || 1);
+  // Lesson to study (defaults to the next lesson to continue)
+  const [lesson, setLesson] = useState<number>(() => progressInfo.nextLesson || 1);
+
+  // Selected paragraphs (1 to 8)
+  const [selectedParagraphs, setSelectedParagraphs] = useState<number[]>(() => {
+    const initialP = Math.min(MAX_PARAGRAPHS_PER_LESSON, Math.max(1, progressInfo.nextParagraph || 1));
+    return [initialP];
+  });
+
+  // Range helper inputs
+  const [rangeFrom, setRangeFrom] = useState<number>(() => {
+    return Math.min(MAX_PARAGRAPHS_PER_LESSON, Math.max(1, progressInfo.nextParagraph || 1));
+  });
+  const [rangeTo, setRangeTo] = useState<number>(() => {
+    const initialP = Math.min(MAX_PARAGRAPHS_PER_LESSON, Math.max(1, progressInfo.nextParagraph || 1));
+    return Math.min(MAX_PARAGRAPHS_PER_LESSON, initialP + 2);
+  });
 
   // Date of this scheduled study attempt / session
   const [studyDate, setStudyDate] = useState<string>(() => {
@@ -89,11 +113,9 @@ export const UpdateCourseProgressModal: React.FC<UpdateCourseProgressModalProps>
 
   // Rescheduled / next study date
   const [nextStudyDate, setNextStudyDate] = useState<string>(() => {
-    // If there is already a recurring day, suggest the next occurrence
     if (currentCourse.recurringDayName) {
       return getNextDateForDayName(currentCourse.recurringDayName);
     }
-    // Or add 7 days to scheduled date
     const base = currentCourse.nextStudyDate || todayStr;
     try {
       const d = parseISODate(base);
@@ -129,8 +151,44 @@ export const UpdateCourseProgressModal: React.FC<UpdateCourseProgressModalProps>
 
   const handleIncrementLesson = () => setLesson(prev => prev + 1);
   const handleDecrementLesson = () => setLesson(prev => Math.max(1, prev - 1));
-  const handleIncrementPoint = () => setPoint(prev => prev + 1);
-  const handleDecrementPoint = () => setPoint(prev => Math.max(1, prev - 1));
+
+  const applyRange = (from: number, to: number) => {
+    const min = Math.min(from, to);
+    const max = Math.max(from, to);
+    setRangeFrom(min);
+    setRangeTo(max);
+    const list: number[] = [];
+    for (let i = min; i <= max; i++) {
+      list.push(i);
+    }
+    setSelectedParagraphs(list);
+  };
+
+  const handleToggleParagraph = (pNum: number) => {
+    setSelectedParagraphs(prev => {
+      let updated: number[];
+      if (prev.includes(pNum)) {
+        if (prev.length === 1) return prev; // keep at least one
+        updated = prev.filter(p => p !== pNum);
+      } else {
+        updated = [...prev, pNum];
+      }
+      updated.sort((a, b) => a - b);
+      if (updated.length > 0) {
+        setRangeFrom(updated[0]);
+        setRangeTo(updated[updated.length - 1]);
+      }
+      return updated;
+    });
+  };
+
+  const currentSortedParagraphs = selectedParagraphs.length > 0
+    ? [...selectedParagraphs].sort((a, b) => a - b)
+    : [1];
+  const currentStartParagraph = currentSortedParagraphs[0];
+  const currentEndParagraph = currentSortedParagraphs[currentSortedParagraphs.length - 1];
+  const currentParagraphsFormatted = formatParagraphsText(currentSortedParagraphs);
+  const nextStudyPreview = calculateNextStudy(lesson, currentEndParagraph);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,35 +199,69 @@ export const UpdateCourseProgressModal: React.FC<UpdateCourseProgressModalProps>
     const finalRecurring = recurringDayName || nextDayName || currentCourse.recurringDayName;
 
     const isGiven = sessionResult === 'ESTUDIO_DADO';
-    const finalLesson = isGiven ? (Number(lesson) || 1) : currentCourse.currentLesson;
-    const finalPoint = isGiven ? (Number(point) || 1) : currentCourse.currentPoint;
 
-    const newHistoryRecord: CourseHistoryRecord = {
-      id: generateUniqueId(),
-      result: sessionResult,
-      lesson: finalLesson,
-      point: finalPoint,
-      date: studyDate,
-      dateFormatted: studyDateFormatted,
-      notes: notes.trim() || undefined,
-      reason: (sessionResult === 'NO_PUDE_IR' || sessionResult === 'ESTUDIANTE_NO_PUDO') 
-        ? (reason.trim() || undefined) 
-        : undefined,
-      rescheduledDate: nextStudyDate || undefined,
-      rescheduledDateFormatted: nextFormatted,
-      timestamp: new Date().toISOString(),
-    };
+    let updatedCourse: BibleCourseInfo;
+    let newHistoryRecord: CourseHistoryRecord;
 
-    const updatedCourse: BibleCourseInfo = {
-      ...currentCourse,
-      currentLesson: finalLesson,
-      currentPoint: finalPoint,
-      nextStudyDate: nextStudyDate || undefined,
-      nextStudyDateFormatted: nextFormatted,
-      nextStudyDayName: nextDayName,
-      recurringDayName: finalRecurring,
-      history: [...(currentCourse.history || []), newHistoryRecord],
-    };
+    if (isGiven) {
+      newHistoryRecord = {
+        id: generateUniqueId(),
+        result: 'ESTUDIO_DADO',
+        lesson: Number(lesson) || 1,
+        point: currentEndParagraph,
+        paragraphStart: currentStartParagraph,
+        paragraphEnd: currentEndParagraph,
+        paragraphs: currentSortedParagraphs,
+        paragraphsText: currentParagraphsFormatted,
+        date: studyDate,
+        dateFormatted: studyDateFormatted,
+        notes: notes.trim() || undefined,
+        rescheduledDate: nextStudyDate || undefined,
+        rescheduledDateFormatted: nextFormatted,
+        timestamp: new Date().toISOString(),
+      };
+
+      updatedCourse = {
+        ...currentCourse,
+        currentLesson: nextStudyPreview.nextLesson,
+        currentPoint: nextStudyPreview.nextParagraph,
+        lastStudiedLesson: Number(lesson) || 1,
+        lastStudiedParagraphsText: currentParagraphsFormatted,
+        lastStudiedEndParagraph: currentEndParagraph,
+        nextStudyDate: nextStudyDate || undefined,
+        nextStudyDateFormatted: nextFormatted,
+        nextStudyDayName: nextDayName,
+        recurringDayName: finalRecurring,
+        history: [...(currentCourse.history || []), newHistoryRecord],
+      };
+    } else {
+      // Study was NOT given: DO NOT advance lesson nor paragraphs!
+      newHistoryRecord = {
+        id: generateUniqueId(),
+        result: sessionResult,
+        lesson: currentCourse.currentLesson,
+        point: currentCourse.currentPoint,
+        date: studyDate,
+        dateFormatted: studyDateFormatted,
+        notes: notes.trim() || undefined,
+        reason: (sessionResult === 'NO_PUDE_IR' || sessionResult === 'ESTUDIANTE_NO_PUDO') 
+          ? (reason.trim() || undefined) 
+          : undefined,
+        rescheduledDate: nextStudyDate || undefined,
+        rescheduledDateFormatted: nextFormatted,
+        timestamp: new Date().toISOString(),
+      };
+
+      updatedCourse = {
+        ...currentCourse,
+        // preserve currentLesson, currentPoint, and last studied paragraph data!
+        nextStudyDate: nextStudyDate || undefined,
+        nextStudyDateFormatted: nextFormatted,
+        nextStudyDayName: nextDayName,
+        recurringDayName: finalRecurring,
+        history: [...(currentCourse.history || []), newHistoryRecord],
+      };
+    }
 
     const updatedPerson: Person = {
       ...person,
@@ -213,12 +305,19 @@ export const UpdateCourseProgressModal: React.FC<UpdateCourseProgressModalProps>
         </div>
 
         {/* Student banner */}
-        <div className="bg-indigo-50/80 px-5 py-2.5 border-b border-indigo-100 flex items-center justify-between text-xs text-indigo-950 font-medium">
+        <div className="bg-indigo-50/80 px-4 sm:px-5 py-2.5 border-b border-indigo-100 flex items-center justify-between gap-2 text-xs text-indigo-950 font-medium flex-wrap">
           <div className="truncate">
             Estudiante: <span className="font-extrabold text-indigo-900">{person.name}</span>
           </div>
-          <div className="text-[11px] bg-white px-2 py-0.5 rounded-md border border-indigo-200 font-bold text-indigo-800 shrink-0">
-            Lección actual: {currentCourse.currentLesson} • Punto {currentCourse.currentPoint}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {progressInfo.hasStudiedBefore && progressInfo.lastStudiedText && (
+              <span className="text-[11px] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 font-bold text-emerald-900">
+                ✅ Última vez: {progressInfo.lastStudiedText}
+              </span>
+            )}
+            <span className="text-[11px] bg-white px-2 py-0.5 rounded-md border border-indigo-200 font-bold text-indigo-800 shrink-0">
+              ▶️ Continuar: {progressInfo.continueText}
+            </span>
           </div>
         </div>
 
@@ -368,17 +467,17 @@ export const UpdateCourseProgressModal: React.FC<UpdateCourseProgressModalProps>
 
           {/* Dynamic Content: Section for ESTUDIO DADO */}
           {sessionResult === 'ESTUDIO_DADO' && (
-            <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-200 space-y-3 animate-in fade-in duration-150">
+            <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-200 space-y-3.5 animate-in fade-in duration-150">
               <div className="text-xs font-black text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Avance alcanzado en esta sesión:</span>
+                <span>Parte de la lección analizada hoy:</span>
               </div>
 
               {/* Lección Stepper */}
               <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-xl border border-emerald-200 shadow-2xs">
                 <div>
-                  <div className="text-xs font-bold text-slate-800">📖 LECCIÓN</div>
-                  <div className="text-[11px] text-slate-500">Número de lección alcanzada</div>
+                  <div className="text-xs font-black text-slate-900">📖 LECCIÓN</div>
+                  <div className="text-[11px] text-slate-500">Número de lección tratada</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -394,7 +493,7 @@ export const UpdateCourseProgressModal: React.FC<UpdateCourseProgressModalProps>
                     max={200}
                     value={lesson}
                     onChange={(e) => setLesson(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-14 h-9 text-center font-extrabold text-lg text-slate-900 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                    className="w-14 h-9 text-center font-black text-lg text-slate-900 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                   />
                   <button
                     type="button"
@@ -406,35 +505,151 @@ export const UpdateCourseProgressModal: React.FC<UpdateCourseProgressModalProps>
                 </div>
               </div>
 
-              {/* Punto Stepper */}
-              <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-xl border border-emerald-200 shadow-2xs">
-                <div>
-                  <div className="text-xs font-bold text-slate-800">🔖 PUNTO / PÁRRAFO</div>
-                  <div className="text-[11px] text-slate-500">Párrafo o subtema donde quedaron</div>
+              {/* Párrafos analizados (máximo 8 párrafos: checkboxes 1 a 8) */}
+              <div className="bg-white p-3.5 rounded-xl border border-emerald-200 shadow-2xs space-y-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div>
+                    <div className="text-xs font-black text-slate-900 uppercase">
+                      Párrafos analizados (1 al 8)
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      Marca los párrafos o selecciona un rango
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-emerald-950 bg-emerald-100 px-2.5 py-1 rounded-md border border-emerald-300">
+                    {currentParagraphsFormatted}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleDecrementPoint}
-                    className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-extrabold flex items-center justify-center transition-colors"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <input
-                    type="number"
-                    min={1}
-                    max={50}
-                    value={point}
-                    onChange={(e) => setPoint(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-14 h-9 text-center font-extrabold text-lg text-slate-900 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleIncrementPoint}
-                    className="w-8 h-8 rounded-lg bg-emerald-100 hover:bg-emerald-200 active:bg-emerald-300 text-emerald-950 font-extrabold flex items-center justify-center transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
+
+                {/* The 8 Checkboxes (1 al 8) */}
+                <div className="space-y-1">
+                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 pt-0.5">
+                    {PARAGRAPHS_LIST.map((pNum) => {
+                      const isChecked = selectedParagraphs.includes(pNum);
+                      return (
+                        <label
+                          key={`paragraph-check-${pNum}`}
+                          className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl border-2 cursor-pointer transition-all select-none ${
+                            isChecked
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs ring-2 ring-emerald-300 scale-[1.02]'
+                              : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200 hover:border-emerald-300'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => handleToggleParagraph(pNum)}
+                            className="sr-only"
+                          />
+                          <div className="flex items-center gap-1">
+                            <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] font-black border ${
+                              isChecked ? 'bg-white text-emerald-700 border-white' : 'border-slate-400 bg-white'
+                            }`}>
+                              {isChecked ? '✓' : ''}
+                            </span>
+                            <span className="text-sm font-black">{pNum}</span>
+                          </div>
+                          <span className="text-[9px] uppercase tracking-tighter opacity-80 mt-0.5 font-bold">
+                            Párr.
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Rango rápido: Selector y atajos */}
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between text-xs text-slate-700 font-bold flex-wrap gap-2">
+                    <span className="text-[11px] text-slate-600 font-black">
+                      SELECCIONAR RANGO:
+                    </span>
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <span className="text-slate-500 font-semibold">Del</span>
+                      <select
+                        value={rangeFrom}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setRangeFrom(val);
+                          applyRange(val, Math.max(val, rangeTo));
+                        }}
+                        className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-extrabold text-slate-900 focus:ring-2 focus:ring-emerald-500"
+                      >
+                        {PARAGRAPHS_LIST.map(n => (
+                          <option key={`from-${n}`} value={n}>Párrafo {n}</option>
+                        ))}
+                      </select>
+                      <span className="text-slate-500 font-semibold">al</span>
+                      <select
+                        value={rangeTo}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setRangeTo(val);
+                          applyRange(Math.min(val, rangeFrom), val);
+                        }}
+                        className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-extrabold text-slate-900 focus:ring-2 focus:ring-emerald-500"
+                      >
+                        {PARAGRAPHS_LIST.map(n => (
+                          <option key={`to-${n}`} value={n}>Párrafo {n}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Range shortcut chips */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    <span className="text-[10px] font-black text-slate-400 uppercase">Atajos:</span>
+                    <button
+                      type="button"
+                      onClick={() => applyRange(1, 3)}
+                      className="text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 border border-slate-200 transition-colors shadow-2xs"
+                    >
+                      Párrafos 1–3
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyRange(4, 8)}
+                      className="text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 border border-slate-200 transition-colors shadow-2xs"
+                    >
+                      Párrafos 4–8
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyRange(1, 8)}
+                      className="text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 text-slate-800 hover:text-emerald-900 border border-slate-200 transition-colors shadow-2xs"
+                    >
+                      Toda (1 al 8)
+                    </button>
+                    {progressInfo.nextParagraph > 1 && progressInfo.nextParagraph < 8 && (
+                      <button
+                        type="button"
+                        onClick={() => applyRange(progressInfo.nextParagraph, 8)}
+                        className="text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300 transition-colors shadow-2xs"
+                      >
+                        Párr. {progressInfo.nextParagraph} al 8
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Calculation preview */}
+                <div className="bg-emerald-50/70 p-3 rounded-xl border border-emerald-200 space-y-1.5">
+                  <div className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
+                    <span>📖 Registrando: Lección {lesson}, {currentParagraphsFormatted}</span>
+                  </div>
+                  <div className="text-xs text-slate-800 flex items-center gap-1.5">
+                    <span className="font-bold text-indigo-700">▶️ Continuar:</span>
+                    <span className="font-black text-slate-950">{nextStudyPreview.continueText}</span>
+                  </div>
+                  <div className="text-[11px] font-bold text-indigo-900 bg-white px-2.5 py-1 rounded-lg border border-indigo-200 flex items-center justify-between">
+                    <span>Próximo estudio:</span>
+                    <span className="font-black text-indigo-950">{nextStudyPreview.nextStudySummary}</span>
+                  </div>
+                  {nextStudyPreview.isLessonFinished && (
+                    <div className="text-xs font-black text-emerald-900 bg-emerald-100 p-2 rounded-lg border border-emerald-300">
+                      🎉 Lección terminada. Próximo estudio: Lección {nextStudyPreview.nextLesson} — párrafo 1
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -35,6 +35,7 @@ import {
   formatDateToISO 
 } from '../utils/dateUtils';
 import { isBibleCourseDueToday } from '../utils/storage';
+import { getCourseProgressDetails } from '../utils/courseProgress';
 
 interface BibleCourseDetailModalProps {
   isOpen: boolean;
@@ -80,6 +81,8 @@ export const BibleCourseDetailModal: React.FC<BibleCourseDetailModalProps> = ({
   const isDueToday = isBibleCourseDueToday(person);
   const todayStr = getTodayString();
   const todayDayName = getDayName(todayStr);
+
+  const progressInfo = getCourseProgressDetails(course);
 
   const currentStudyDay = course.recurringDayName || course.nextStudyDayName || '';
   const currentStudyDayNorm = normalizeDayName(currentStudyDay);
@@ -323,27 +326,43 @@ export const BibleCourseDetailModal: React.FC<BibleCourseDetailModalProps> = ({
               </div>
             )}
 
-            <div className="flex items-baseline justify-between">
-              <div>
-                <div className="text-2xl font-black tracking-tight text-white">
-                  Lección {course.currentLesson}
-                </div>
-                <div className="text-xs text-indigo-200 font-semibold mt-0.5">
-                  Punto {course.currentPoint}
-                </div>
+            {/* Clear Student Study Tracking Panel */}
+            <div className="bg-indigo-950/70 border border-indigo-700/60 rounded-xl p-3.5 space-y-2 text-xs text-white">
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold text-sm text-amber-300">
+                  📖 Estudio actual: Lección {progressInfo.displayLesson}
+                </span>
+                <span className="text-[11px] font-bold text-indigo-200">
+                  {progressPercent}% completado
+                </span>
               </div>
-              <div className="text-right">
-                <div className="text-xl font-extrabold text-amber-400">
-                  {progressPercent}%
+
+              {progressInfo.hasStudiedBefore && progressInfo.lastStudiedText && (
+                <div className="text-emerald-300 font-bold flex items-center gap-1.5">
+                  <span>✅ Última vez:</span>
+                  <span className="font-extrabold text-white">{progressInfo.lastStudiedText}</span>
                 </div>
-                <div className="text-[10px] text-indigo-300">
-                  completado
+              )}
+
+              <div className="text-indigo-100 font-bold flex items-center gap-1.5">
+                <span className="text-amber-300 font-extrabold">▶️ Continuar:</span>
+                <span className="font-black text-white">{progressInfo.continueText}</span>
+              </div>
+
+              {progressInfo.isLessonFinished && (
+                <div className="text-[11px] font-black text-emerald-200 bg-emerald-900/70 p-2 rounded-lg border border-emerald-500/50">
+                  🎉 Lección terminada. Próximo estudio: Lección {progressInfo.nextLesson} — párrafo 1
                 </div>
+              )}
+
+              <div className="text-[11px] text-indigo-200 pt-1.5 border-t border-indigo-800/80 flex items-center justify-between">
+                <span>Próximo estudio:</span>
+                <strong className="text-white font-black">{progressInfo.nextStudySummary}</strong>
               </div>
             </div>
 
             {/* Visual Progress Bar */}
-            <div className="w-full bg-indigo-950/60 rounded-full h-3.5 p-0.5 border border-indigo-700/50 overflow-hidden">
+            <div className="w-full bg-indigo-950/60 rounded-full h-3 p-0.5 border border-indigo-700/50 overflow-hidden">
               <div 
                 className="bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300 h-full rounded-full transition-all duration-500 ease-out shadow-xs"
                 style={{ width: `${progressPercent}%` }}
@@ -351,10 +370,10 @@ export const BibleCourseDetailModal: React.FC<BibleCourseDetailModalProps> = ({
             </div>
 
             {/* Next study info */}
-            <div className="pt-2 border-t border-indigo-800/80 flex items-center justify-between text-xs text-indigo-200">
+            <div className="pt-1 border-t border-indigo-800/80 flex items-center justify-between text-xs text-indigo-200">
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-indigo-300" />
-                <span>Próximo estudio:</span>
+                <span>Fecha agendada:</span>
               </div>
               <strong className="text-white font-bold capitalize">
                 {course.nextStudyDateFormatted || course.nextStudyDate || 'Sin agendar'}
@@ -684,9 +703,9 @@ export const BibleCourseDetailModal: React.FC<BibleCourseDetailModalProps> = ({
                       </div>
 
                       {/* Lesson and Point context */}
-                      <div className="text-xs text-slate-800 flex items-center justify-between gap-2">
-                        <span className="font-extrabold text-indigo-950 bg-indigo-50/80 px-2 py-0.5 rounded-md border border-indigo-200">
-                          📖 Lección {rec.lesson} — Punto {rec.point}
+                      <div className="text-xs text-slate-800 flex items-center justify-between gap-2 flex-wrap">
+                        <span className="font-extrabold text-indigo-950 bg-indigo-50/80 px-2.5 py-1 rounded-md border border-indigo-200">
+                          📖 Lección {rec.lesson} — {rec.paragraphsText || `Punto ${rec.point}`}
                           {!isGiven && <span className="font-normal text-slate-500 ml-1">(sin avance)</span>}
                         </span>
                         {rec.rescheduledDateFormatted && (

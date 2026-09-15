@@ -54,8 +54,12 @@ export type StudySessionResult =
 export interface CourseHistoryRecord {
   id: string;
   result?: StudySessionResult;         // 'ESTUDIO_DADO' | 'ESTUDIANTE_NO_ESTABA' | 'NO_PUDE_IR' | 'ESTUDIANTE_NO_PUDO'
-  lesson: number;                      // Número de lección (ej: 2, 5, etc.)
-  point: number;                       // Número de punto (ej: 4, 1, etc.)
+  lesson: number;                      // Número de lección (ej: 1, 2, etc.)
+  point: number;                       // Número de punto/párrafo alcanzado
+  paragraphStart?: number;             // Párrafo inicial analizado (1..8)
+  paragraphEnd?: number;               // Párrafo final analizado (1..8)
+  paragraphs?: number[];               // Lista de párrafos estudiados (ej: [1, 2, 3])
+  paragraphsText?: string;             // Texto de párrafos (ej: "párrafos 1–3" o "párrafo 4")
   date: string;                        // YYYY-MM-DD
   dateFormatted: string;               // ej: "20 de agosto de 2026"
   notes?: string;                      // Notas u observaciones de la lección
@@ -69,8 +73,11 @@ export interface BibleCourseInfo {
   courseStartedAt: string;             // YYYY-MM-DD
   courseStartedAtFormatted: string;    // ej: "20 de agosto de 2026"
   status: CourseStatus;                // 'ACTIVO' | 'PAUSADO' | 'TERMINADO' | 'NO_CONTINUA'
-  currentLesson: number;               // Lección actual (ej: 5)
-  currentPoint: number;                // Punto actual (ej: 1)
+  currentLesson: number;               // Lección actual (ej: 1)
+  currentPoint: number;                // Párrafo o punto actual donde continuar (1..8)
+  lastStudiedLesson?: number;          // Última lección analizada
+  lastStudiedParagraphsText?: string;  // ej: "párrafos 1–3"
+  lastStudiedEndParagraph?: number;    // Último párrafo analizado (1..8)
   totalLessons: number;                // Total de lecciones estimadas (por defecto 60)
   nextStudyDate?: string;              // YYYY-MM-DD (Cualquier día de lunes a domingo)
   nextStudyDateFormatted?: string;     // ej: "Sábado 22 de agosto de 2026"

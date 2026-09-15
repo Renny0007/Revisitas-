@@ -225,10 +225,10 @@ export const FullJourneyHistoryModal: React.FC<FullJourneyHistoryModalProps> = (
                             </span>
                           </div>
 
-                          <div className="text-xs text-slate-800 flex items-center justify-between gap-2">
+                          <div className="text-xs text-slate-800 flex items-center justify-between gap-2 flex-wrap">
                             <div className="font-extrabold text-indigo-950 flex items-center gap-1.5">
                               <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-                              <span>LECCIÓN {rec.lesson} — PUNTO {rec.point}</span>
+                              <span>LECCIÓN {rec.lesson} — {(rec.paragraphsText || `PUNTO ${rec.point}`).toUpperCase()}</span>
                               {!isGiven && <span className="font-normal text-slate-500 text-[11px]">(sin avance)</span>}
                             </div>
                             {rec.rescheduledDateFormatted && (

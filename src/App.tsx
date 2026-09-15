@@ -48,6 +48,7 @@ import { InstallAppModal } from './components/InstallAppModal';
 
 // Bible Course components
 import { BibleCoursesView } from './components/BibleCoursesView';
+import { getCourseProgressDetails } from './utils/courseProgress';
 import { PassToCourseModal } from './components/PassToCourseModal';
 import { UpdateCourseProgressModal } from './components/UpdateCourseProgressModal';
 import { BibleCourseDetailModal } from './components/BibleCourseDetailModal';
@@ -522,6 +523,7 @@ export default function App() {
                           ? 'Folleto «Disfrute de la vida»' 
                           : 'Libro «Disfrute de la vida»';
                         const totalStudied = course.history?.length || 0;
+                        const progressInfo = getCourseProgressDetails(course);
 
                         return (
                           <div 
@@ -535,7 +537,7 @@ export default function App() {
                                     📖 Curso Bíblico
                                   </span>
                                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-200">
-                                    Lección {course.currentLesson} • Punto {course.currentPoint}
+                                    Lección {progressInfo.displayLesson} • {progressInfo.continueText}
                                   </span>
                                 </div>
                                 <h4 className="text-base font-extrabold text-slate-900 tracking-tight">
@@ -557,6 +559,27 @@ export default function App() {
                                 >
                                   <Phone className="w-4 h-4" />
                                 </a>
+                              )}
+                            </div>
+
+                            {/* Study Progress Box for Today */}
+                            <div className="bg-white rounded-xl border border-indigo-200 p-2.5 space-y-1 text-xs text-slate-800 shadow-2xs">
+                              <div className="font-extrabold text-indigo-950 flex items-center justify-between">
+                                <span>📖 Estudio actual: Lección {progressInfo.displayLesson}</span>
+                                {progressInfo.hasStudiedBefore && progressInfo.lastStudiedText && (
+                                  <span className="text-[11px] font-bold text-emerald-800">
+                                    Última vez: {progressInfo.lastStudiedText}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs font-black text-indigo-900 flex items-center gap-1">
+                                <span className="text-indigo-600 font-bold">▶️ Continuar:</span>
+                                <span>{progressInfo.continueText}</span>
+                              </div>
+                              {progressInfo.isLessonFinished && (
+                                <div className="text-[11px] font-bold text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                  🎉 Lección terminada. Próximo estudio: Lección {progressInfo.nextLesson} — párrafo 1
+                                </div>
                               )}
                             </div>
 

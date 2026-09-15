@@ -19,6 +19,7 @@ import {
 import { CourseStatus, Person } from '../types';
 import { formatFullDateES } from '../utils/dateUtils';
 import { isBibleCourseDueToday } from '../utils/storage';
+import { getCourseProgressDetails } from '../utils/courseProgress';
 
 interface BibleCoursesViewProps {
   persons: Person[];
@@ -245,6 +246,7 @@ export const BibleCoursesView: React.FC<BibleCoursesViewProps> = ({
             const progressPercent = Math.min(100, Math.round((course.currentLesson / totalLessons) * 100));
             const isDueToday = isBibleCourseDueToday(person);
             const studyDay = course.recurringDayName || course.nextStudyDayName;
+            const progressInfo = getCourseProgressDetails(course);
 
             return (
               <div
@@ -304,31 +306,57 @@ export const BibleCoursesView: React.FC<BibleCoursesViewProps> = ({
                     <strong className="text-slate-700">{course.courseStartedAtFormatted}</strong>
                   </div>
 
-                  {/* Progress Box with Progress Bar */}
-                  <div className="bg-indigo-50/70 border border-indigo-100 rounded-xl p-3 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="font-extrabold text-indigo-950 flex items-center gap-1.5">
-                        <BookOpen className="w-4 h-4 text-indigo-700" />
-                        <span>Progreso: Lección {course.currentLesson} — Punto {course.currentPoint}</span>
+                  {/* Progress Box with Student Study Tracking */}
+                  <div className="bg-indigo-50/80 border border-indigo-200/80 rounded-2xl p-3.5 space-y-2.5 shadow-2xs">
+                    {/* Clear Student Study Tracking Panel */}
+                    <div className="bg-white rounded-xl p-3 border border-indigo-100 shadow-2xs space-y-1.5">
+                      <div className="text-xs font-black text-indigo-950 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <span>📖 Estudio actual:</span>
+                          <strong className="text-indigo-700 font-extrabold">Lección {progressInfo.displayLesson}</strong>
+                        </span>
+                        <span className="text-[11px] font-black text-indigo-900 bg-indigo-100/70 px-2 py-0.5 rounded-md border border-indigo-200">
+                          {progressPercent}%
+                        </span>
                       </div>
-                      <span className="font-extrabold text-indigo-800 text-[11px]">
-                        {progressPercent}%
-                      </span>
+
+                      {progressInfo.hasStudiedBefore && progressInfo.lastStudiedText && (
+                        <div className="text-xs text-emerald-800 font-bold flex items-center gap-1.5">
+                          <span>✅ Última vez:</span>
+                          <span className="font-extrabold text-emerald-950">{progressInfo.lastStudiedText}</span>
+                        </div>
+                      )}
+
+                      <div className="text-xs text-slate-800 font-bold flex items-center gap-1.5">
+                        <span className="text-indigo-700 font-extrabold">▶️ Continuar:</span>
+                        <span className="font-black text-slate-950">{progressInfo.continueText}</span>
+                      </div>
+
+                      {progressInfo.isLessonFinished && (
+                        <div className="text-[11px] font-black text-emerald-900 bg-emerald-100/90 px-2.5 py-1 rounded-lg border border-emerald-300">
+                          🎉 Lección terminada. Próximo estudio: Lección {progressInfo.nextLesson} — párrafo 1
+                        </div>
+                      )}
+
+                      <div className="text-[11px] font-bold text-slate-600 pt-1.5 border-t border-slate-100 flex items-center justify-between">
+                        <span className="text-slate-500">Próximo estudio:</span>
+                        <strong className="text-slate-900 font-black">{progressInfo.nextStudySummary}</strong>
+                      </div>
                     </div>
 
                     {/* Visual Progress Bar */}
-                    <div className="w-full bg-indigo-200/70 rounded-full h-2.5 overflow-hidden">
+                    <div className="w-full bg-indigo-200/70 rounded-full h-2 overflow-hidden">
                       <div 
-                        className="bg-indigo-700 h-full rounded-full transition-all duration-300"
+                        className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-emerald-500 h-full rounded-full transition-all duration-300"
                         style={{ width: `${progressPercent}%` }}
                       />
                     </div>
 
                     {/* Next study info and study day tag */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-indigo-900 pt-1 border-t border-indigo-200/50 gap-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-indigo-950 pt-0.5 gap-1 font-semibold">
                       <div className="flex items-center gap-1">
-                        <span>📅 Próximo estudio:</span>
-                        <strong className="font-bold text-indigo-950 capitalize">
+                        <span>📅 Fecha agendada:</span>
+                        <strong className="font-extrabold text-indigo-900 capitalize">
                           {course.nextStudyDateFormatted || course.nextStudyDate || 'Por agendar'}
                         </strong>
                       </div>
